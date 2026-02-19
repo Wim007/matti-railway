@@ -18,11 +18,11 @@ pnpm install --frozen-lockfile
 
 # Generate PostgreSQL migrations
 echo "🗄️ Generating PostgreSQL migrations..."
-pnpm drizzle-kit generate --config=drizzle.config.railway.ts
+pnpm drizzle-kit generate --config=drizzle.config.ts
 
 # Run migrations
 echo "🚀 Running database migrations..."
-pnpm drizzle-kit migrate --config=drizzle.config.railway.ts
+pnpm drizzle-kit migrate --config=drizzle.config.ts
 
 # Build application
 echo "🏗️ Building application..."

@@ -1,27 +1,32 @@
 /**
  * Follow-up Notification Handler
- * 
+ *
  * This script checks for pending follow-ups and sends notifications to users.
  * Should be run as a scheduled task (e.g., daily cron job).
- * 
+ *
  * Usage:
  * - Via cron: `0 9 * * * cd /home/ubuntu/matti-webapp && node dist/followUpNotificationHandler.js`
  * - Manual: `tsx server/followUpNotificationHandler.ts`
  */
 
-import { drizzle } from "drizzle-orm/mysql2";
-import { eq, and, lte } from "drizzle-orm";
-import { followUps, actions, users } from "../drizzle/schema";
+import { and, eq, lte } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/node-postgres";
+import pg from "pg";
+import { actions, followUps, users } from "../drizzle/schema";
 import { notifyOwner } from "./_core/notification";
+
+const { Pool } = pg;
 
 async function sendFollowUpNotifications() {
   console.log("[FollowUpHandler] Starting follow-up notification check...");
 
-  // Connect to database
-  const db = drizzle(process.env.DATABASE_URL!);
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
+  });
+  const db = drizzle(pool);
 
   try {
-    // Find all pending follow-ups that are due
     const now = new Date();
     const dueFollowUps = await db
       .select({
@@ -31,26 +36,18 @@ async function sendFollowUpNotifications() {
       })
       .from(followUps)
       .innerJoin(actions, eq(followUps.actionId, actions.id))
-      .innerJoin(users, eq(actions.userId, users.id))
-      .where(
-        and(
-          eq(followUps.status, "pending"),
-          lte(followUps.scheduledFor, now)
-        )
-      );
+      .innerJoin(users, eq(actions.userId, users.openId))
+      .where(and(eq(followUps.status, "pending"), lte(followUps.scheduledFor, now)));
 
     console.log(`[FollowUpHandler] Found ${dueFollowUps.length} due follow-ups`);
 
     for (const { followUp, action, user } of dueFollowUps) {
       try {
-        // Send notification to user (via Manus Notification API)
-        // For now, we'll notify the owner (stakeholder) about pending follow-ups
-        const notificationTitle = `Follow-up: ${user.name || "User"}`;
+        const notificationTitle = "🔔 Follow-up check-in nodig";
         const notificationContent = `
-**Actie:** ${action.actionText}
-**Gebruiker:** ${user.name || "Onbekend"} (${user.email || "geen email"})
-**Geplande datum:** ${followUp.scheduledFor.toLocaleDateString("nl-NL")}
-**Status:** Wacht op check-in
+Gebruiker: ${user.name || user.openId}
+Actie: ${action.actionText}
+Gepland voor: ${new Date(followUp.scheduledFor).toLocaleDateString("nl-NL")}
 
 Deze gebruiker heeft een actie gepland en het is tijd voor een follow-up check-in.
         `.trim();
@@ -61,7 +58,6 @@ Deze gebruiker heeft een actie gepland en het is tijd voor een follow-up check-i
         });
 
         if (success) {
-          // Mark follow-up as sent
           await db
             .update(followUps)
             .set({
@@ -83,10 +79,11 @@ Deze gebruiker heeft een actie gepland en het is tijd voor een follow-up check-i
   } catch (error) {
     console.error("[FollowUpHandler] Fatal error:", error);
     throw error;
+  } finally {
+    await pool.end();
   }
 }
 
-// Run if executed directly
 if (require.main === module) {
   sendFollowUpNotifications()
     .then(() => {

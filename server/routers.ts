@@ -1,5 +1,6 @@
-import { COOKIE_NAME } from "@shared/const";
+import { ACCESS_COOKIE_NAME, REFRESH_COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
+import { revokeRefreshToken, rotateRefreshToken } from "./_core/auth";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
 import { actionRouter } from "./actionRouter";
@@ -10,22 +11,26 @@ import { followUpContextRouter } from "./followUpContextRouter";
 import { feedbackRouter } from "./feedbackRouter";
 
 export const appRouter = router({
-    // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
   system: systemRouter,
   assistant: assistantRouter,
   chat: chatRouter,
   auth: router({
-    me: publicProcedure.query(opts => opts.ctx.user),
+    me: publicProcedure.query((opts) => opts.ctx.user),
+    refresh: publicProcedure.mutation(async ({ ctx }) => {
+      const success = await rotateRefreshToken(ctx.req, ctx.res);
+      return { success } as const;
+    }),
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
-      ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
+      revokeRefreshToken(ctx.user?.openId);
+      ctx.res.clearCookie(ACCESS_COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
+      ctx.res.clearCookie(REFRESH_COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
       return {
         success: true,
       } as const;
     }),
   }),
 
-  // Feature routers
   action: actionRouter,
   analytics: analyticsRouter,
   followUpContext: followUpContextRouter,
