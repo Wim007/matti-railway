@@ -1,0 +1,36 @@
+name: Copy code from matti-v2
+
+on:
+  workflow_dispatch:
+
+jobs:
+  copy-code:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout matti-railway
+        uses: actions/checkout@v4
+        with:
+          path: matti-railway
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Clone matti-v2
+        run: git clone https://github.com/Wim007/matti-v2.git matti-v2
+
+      - name: Copy all files from matti-v2 to matti-railway
+        run: |
+          cd matti-railway
+          # Remove all existing files except .git
+          find . -maxdepth 1 -not -name '.git' -not -name '.' -exec rm -rf {} +
+          # Copy all files from matti-v2 (exclude .git)
+          rsync -av --exclude='.git' ../matti-v2/ .
+
+      - name: Commit and push
+        run: |
+          cd matti-railway
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add -A
+          git commit -m "Copy code from matti-v2" || echo "Nothing to commit"
+          git push
