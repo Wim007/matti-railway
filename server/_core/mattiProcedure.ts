@@ -4,7 +4,7 @@ import { publicProcedure } from "./trpc";
 /**
  * Matti Procedure
  * 
- * Custom procedure that uses localStorage profile ID instead of Manus OAuth
+ * Custom procedure that uses localStorage profile ID instead of external OAuth
  * Extracts userId from X-Matti-User-Id header sent by frontend
  */
 export const mattiProcedure = publicProcedure.use(async ({ ctx, next }) => {

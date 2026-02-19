@@ -7,8 +7,8 @@ import { eq, and } from "drizzle-orm";
 
 // Dashboard API configuration
 const ANALYTICS_CONFIG = {
-  apiKey: 'ak_zy2wNbIDSOt9ahf4Huk1lfvie12eRn8WT7hD9VEbCgXWTnI8',
-  endpoint: 'https://analdash-gktrmfew.manus.space/api/analytics/event'
+  apiKey: process.env.MATTI_DASHBOARD_API_KEY ?? "",
+  endpoint: process.env.ANALYTICS_ENDPOINT ?? "",
 };
 
 /**
@@ -57,8 +57,12 @@ function convertToDashboardFormat(eventType: string, eventData: any) {
 
 async function sendEventToDashboard(eventType: string, eventData: any) {
   try {
+    if (!ANALYTICS_CONFIG.endpoint || !ANALYTICS_CONFIG.apiKey) {
+      return false;
+    }
+
     const dashboardEvent = convertToDashboardFormat(eventType, eventData);
-    
+
     const response = await fetch(ANALYTICS_CONFIG.endpoint, {
       method: "POST",
       headers: {

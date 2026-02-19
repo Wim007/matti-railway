@@ -45,8 +45,12 @@ JWT_SECRET=<random-string-hier>
 NODE_ENV=production
 
 # Analytics (optioneel - voor Dashboard integratie)
-VITE_ANALYTICS_ENDPOINT=https://jouw-dashboard.com/api/analytics/event
-mattisleutel=<dashboard-api-key>
+ANALYTICS_ENDPOINT=https://jouw-dashboard.com/api/analytics/event
+MATTI_DASHBOARD_API_KEY=<dashboard-api-key>
+
+# Frontend analytics script (optioneel)
+VITE_ANALYTICS_ENDPOINT=https://jouw-umami-domein.com
+VITE_ANALYTICS_WEBSITE_ID=<website-id>
 ```
 
 ### Environment Variables Verkrijgen:
@@ -193,7 +197,7 @@ Bij je domain provider (Hostnet, TransIP, etc.):
 Nu deployt Railway automatisch bij elke GitHub push!
 
 **Workflow:**
-1. Fix bug in Manus
+1. Fix bug in deployment flow
 2. Push naar GitHub (`gh` CLI of GitHub Desktop)
 3. Railway deployt automatisch (~5 min)
 4. Test op live URL

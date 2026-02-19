@@ -21,13 +21,11 @@ export default function Welcome() {
             </h1>
           </div>
 
-          {/* Humorous Teen Image */}
+          {/* Visual */}
           <div className="flex justify-center">
-            <img 
-              src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663030245921/idHgRDPaipBPClXU.jpg" 
-              alt="Puber met puistjes kijkt geschrokken in de spiegel" 
-              className="w-64 h-64 object-cover rounded-full shadow-lg"
-            />
+            <div className="w-64 h-64 rounded-full shadow-lg bg-white/80 flex items-center justify-center text-7xl" aria-label="Welkom illustratie">
+              🙂
+            </div>
           </div>
 
           {/* Main Content - Accordion */}
