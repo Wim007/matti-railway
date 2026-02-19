@@ -7,7 +7,9 @@ import { fileURLToPath } from "url";
 import { createServer as createViteServer } from "vite";
 import viteConfig from "../../vite.config";
 
-const moduleDirname = path.dirname(fileURLToPath(import.meta.url));
+const moduleDirname = typeof import.meta.url === "string"
+  ? path.dirname(fileURLToPath(import.meta.url))
+  : process.cwd();
 
 export async function setupVite(app: Express, server: Server) {
   const serverOptions = {
@@ -54,7 +56,8 @@ export function serveStatic(app: Express) {
   const distPath =
     process.env.NODE_ENV === "development"
       ? path.resolve(moduleDirname, "../..", "dist", "public")
-      : path.resolve(moduleDirname, "public");
+      : path.resolve(process.cwd(), "dist", "public");
+
   if (!fs.existsSync(distPath)) {
     console.error(
       `Could not find the build directory: ${distPath}, make sure to build the client first`
