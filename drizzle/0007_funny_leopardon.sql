@@ -1,0 +1,4 @@
+ALTER TABLE `actions` MODIFY COLUMN `themeId` enum('general','school','friends','home','feelings','love','freetime','future','self','bullying') NOT NULL;--> statement-breakpoint
+ALTER TABLE `analytics` MODIFY COLUMN `themeId` enum('general','school','friends','home','feelings','love','freetime','future','self','bullying');--> statement-breakpoint
+ALTER TABLE `conversations` MODIFY COLUMN `themeId` enum('general','school','friends','home','feelings','love','freetime','future','self','bullying') NOT NULL;--> statement-breakpoint
+ALTER TABLE `themes` MODIFY COLUMN `currentTheme` enum('general','school','friends','home','feelings','love','freetime','future','self','bullying') NOT NULL DEFAULT 'general';

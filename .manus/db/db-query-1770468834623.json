@@ -1,0 +1,16 @@
+{
+  "query": "SELECT id, userId, threadId, createdAt FROM conversations ORDER BY createdAt DESC LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3bjG5q3gEHRTz8G.3580e1314050 --database jGJoYxWLAciTDqNHGXatxf --execute SELECT id, userId, threadId, createdAt FROM conversations ORDER BY createdAt DESC LIMIT 1;",
+  "rows": [
+    {
+      "id": "120001",
+      "userId": "1",
+      "threadId": "NULL",
+      "createdAt": "2026-02-06 23:11:26"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tuserId\tthreadId\tcreatedAt\n120001\t1\tNULL\t2026-02-06 23:11:26\n",
+  "stderr": "",
+  "execution_time_ms": 466
+}

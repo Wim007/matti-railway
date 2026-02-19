@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE `actions` MODIFY COLUMN `themeId` enum('general','school','friends','home','feelings','love','freetime','future','self','bullying') NOT NULL;\nALTER TABLE `analytics` MODIFY COLUMN `themeId` enum('general','school','friends','home','feelings','love','freetime','future','self','bullying');\nALTER TABLE `conversations` MODIFY COLUMN `themeId` enum('general','school','friends','home','feelings','love','freetime','future','self','bullying') NOT NULL;\nALTER TABLE `themes` MODIFY COLUMN `currentTheme` enum('general','school','friends','home','feelings','love','freetime','future','self','bullying') NOT NULL DEFAULT 'general';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3bjG5q3gEHRTz8G.3580e1314050 --database jGJoYxWLAciTDqNHGXatxf --execute ALTER TABLE `actions` MODIFY COLUMN `themeId` enum('general','school','friends','home','feelings','love','freetime','future','self','bullying') NOT NULL;\nALTER TABLE `analytics` MODIFY COLUMN `themeId` enum('general','school','friends','home','feelings','love','freetime','future','self','bullying');\nALTER TABLE `conversations` MODIFY COLUMN `themeId` enum('general','school','friends','home','feelings','love','freetime','future','self','bullying') NOT NULL;\nALTER TABLE `themes` MODIFY COLUMN `currentTheme` enum('general','school','friends','home','feelings','love','freetime','future','self','bullying') NOT NULL DEFAULT 'general';",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1152
+}

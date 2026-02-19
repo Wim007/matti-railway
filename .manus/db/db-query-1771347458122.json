@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE `messageFeedback` (\n\t`id` int AUTO_INCREMENT NOT NULL,\n\t`conversationId` int NOT NULL,\n\t`userId` varchar(255) NOT NULL,\n\t`messageIndex` int NOT NULL,\n\t`rating` enum('up','down') NOT NULL,\n\t`feedbackText` text,\n\t`createdAt` timestamp NOT NULL DEFAULT (now()),\n\tCONSTRAINT `messageFeedback_id` PRIMARY KEY(`id`)\n);\n\nALTER TABLE `messageFeedback` ADD CONSTRAINT `messageFeedback_conversationId_conversations_id_fk` FOREIGN KEY (`conversationId`) REFERENCES `conversations`(`id`) ON DELETE no action ON UPDATE no action;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3bjG5q3gEHRTz8G.3580e1314050 --database jGJoYxWLAciTDqNHGXatxf --execute CREATE TABLE `messageFeedback` (\n\t`id` int AUTO_INCREMENT NOT NULL,\n\t`conversationId` int NOT NULL,\n\t`userId` varchar(255) NOT NULL,\n\t`messageIndex` int NOT NULL,\n\t`rating` enum('up','down') NOT NULL,\n\t`feedbackText` text,\n\t`createdAt` timestamp NOT NULL DEFAULT (now()),\n\tCONSTRAINT `messageFeedback_id` PRIMARY KEY(`id`)\n);\n\nALTER TABLE `messageFeedback` ADD CONSTRAINT `messageFeedback_conversationId_conversations_id_fk` FOREIGN KEY (`conversationId`) REFERENCES `conversations`(`id`) ON DELETE no action ON UPDATE no action;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 2770
+}

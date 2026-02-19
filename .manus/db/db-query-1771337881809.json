@@ -1,0 +1,64 @@
+{
+  "query": "SELECT id, userId, themeId, status, actionText, createdAt, completedAt FROM actions ORDER BY createdAt DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3bjG5q3gEHRTz8G.3580e1314050 --database jGJoYxWLAciTDqNHGXatxf --execute SELECT id, userId, themeId, status, actionText, createdAt, completedAt FROM actions ORDER BY createdAt DESC LIMIT 10;",
+  "rows": [
+    {
+      "id": "120002",
+      "userId": "user_1771337159795",
+      "themeId": "general",
+      "status": "completed",
+      "actionText": "Maak vanavond een overzicht van je schooltaken en verdeel ze over de week",
+      "createdAt": "2026-02-17 14:07:33",
+      "completedAt": "2026-02-17 14:08:43"
+    },
+    {
+      "id": "120001",
+      "userId": "user_1771337159795",
+      "themeId": "general",
+      "status": "cancelled",
+      "actionText": "Maak deze week een dagelijkse planning voor je schoolwerk en zorg voor minimaal 8 uur slaap per nacht",
+      "createdAt": "2026-02-17 14:07:14",
+      "completedAt": "NULL"
+    },
+    {
+      "id": "90001",
+      "userId": "user_1770736523302",
+      "themeId": "school",
+      "status": "pending",
+      "actionText": "Misschien kun je een keer eerlijk zeggen dat je het zat bent dat ze blijven pushen",
+      "createdAt": "2026-02-10 15:22:02",
+      "completedAt": "NULL"
+    },
+    {
+      "id": "60001",
+      "userId": "user_1770681300216",
+      "themeId": "general",
+      "status": "pending",
+      "actionText": "Misschien kun je een keer samen iets doen, zoals na school even chillen of samen huiswerk maken",
+      "createdAt": "2026-02-10 14:09:06",
+      "completedAt": "NULL"
+    },
+    {
+      "id": "30001",
+      "userId": "user_1770681300216",
+      "themeId": "bullying",
+      "status": "pending",
+      "actionText": "Praat deze week met je mentor over het pesten",
+      "createdAt": "2026-02-10 12:08:11",
+      "completedAt": "NULL"
+    },
+    {
+      "id": "1",
+      "userId": "user_1770681300216",
+      "themeId": "home",
+      "status": "pending",
+      "actionText": "Kies vanavond één onderwerp en besteed daar 10-15 minuten aan",
+      "createdAt": "2026-02-10 09:58:36",
+      "completedAt": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tuserId\tthemeId\tstatus\tactionText\tcreatedAt\tcompletedAt\n120002\tuser_1771337159795\tgeneral\tcompleted\tMaak vanavond een overzicht van je schooltaken en verdeel ze over de week\t2026-02-17 14:07:33\t2026-02-17 14:08:43\n120001\tuser_1771337159795\tgeneral\tcancelled\tMaak deze week een dagelijkse planning voor je schoolwerk en zorg voor minimaal 8 uur slaap per nacht\t2026-02-17 14:07:14\tNULL\n90001\tuser_1770736523302\tschool\tpending\tMisschien kun je een keer eerlijk zeggen dat je het zat bent dat ze blijven pushen\t2026-02-10 15:22:02\tNULL\n60001\tuser_1770681300216\tgeneral\tpending\tMisschien kun je een keer samen iets doen, zoals na school even chillen of samen huiswerk maken\t2026-02-10 14:09:06\tNULL\n30001\tuser_1770681300216\tbullying\tpending\tPraat deze week met je mentor over het pesten\t2026-02-10 12:08:11\tNULL\n1\tuser_1770681300216\thome\tpending\tKies vanavond één onderwerp en besteed daar 10-15 minuten aan\t2026-02-10 09:58:36\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 948
+}

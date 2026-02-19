@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE `followUps` (\n\t`id` int AUTO_INCREMENT NOT NULL,\n\t`actionId` int NOT NULL,\n\t`scheduledFor` timestamp NOT NULL,\n\t`status` enum('pending','sent','responded','skipped') NOT NULL DEFAULT 'pending',\n\t`notificationSent` timestamp,\n\t`response` text,\n\t`createdAt` timestamp NOT NULL DEFAULT (now()),\n\tCONSTRAINT `followUps_id` PRIMARY KEY(`id`)\n);\n\nALTER TABLE `followUps` ADD CONSTRAINT `followUps_actionId_actions_id_fk` FOREIGN KEY (`actionId`) REFERENCES `actions`(`id`) ON DELETE no action ON UPDATE no action;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3bjG5q3gEHRTz8G.3580e1314050 --database jGJoYxWLAciTDqNHGXatxf --execute CREATE TABLE `followUps` (\n\t`id` int AUTO_INCREMENT NOT NULL,\n\t`actionId` int NOT NULL,\n\t`scheduledFor` timestamp NOT NULL,\n\t`status` enum('pending','sent','responded','skipped') NOT NULL DEFAULT 'pending',\n\t`notificationSent` timestamp,\n\t`response` text,\n\t`createdAt` timestamp NOT NULL DEFAULT (now()),\n\tCONSTRAINT `followUps_id` PRIMARY KEY(`id`)\n);\n\nALTER TABLE `followUps` ADD CONSTRAINT `followUps_actionId_actions_id_fk` FOREIGN KEY (`actionId`) REFERENCES `actions`(`id`) ON DELETE no action ON UPDATE no action;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 2616
+}

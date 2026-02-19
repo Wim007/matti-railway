@@ -1,0 +1,154 @@
+{
+  "query": "SELECT \n  id,\n  themeId,\n  initialProblem,\n  JSON_LENGTH(messages) as message_count,\n  JSON_EXTRACT(messages, '$[0].content') as first_user_message,\n  createdAt\nFROM conversations\nORDER BY createdAt DESC\nLIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3bjG5q3gEHRTz8G.3580e1314050 --database jGJoYxWLAciTDqNHGXatxf --execute SELECT \n  id,\n  themeId,\n  initialProblem,\n  JSON_LENGTH(messages) as message_count,\n  JSON_EXTRACT(messages, '$[0].content') as first_user_message,\n  createdAt\nFROM conversations\nORDER BY createdAt DESC\nLIMIT 20;",
+  "rows": [
+    {
+      "id": "390002",
+      "themeId": "home",
+      "initialProblem": "NULL",
+      "message_count": "2",
+      "first_user_message": "\"Ik heb morgen een toets en ik ben zenuwachtig\"",
+      "createdAt": "2026-02-10 10:22:19"
+    },
+    {
+      "id": "360001",
+      "themeId": "feelings",
+      "initialProblem": "Gevoelens - school, gepest, moe",
+      "message_count": "2",
+      "first_user_message": "\"Ik word gepest op school. Wat moet ik doen?\"",
+      "createdAt": "2026-02-10 08:55:45"
+    },
+    {
+      "id": "330004",
+      "themeId": "general",
+      "initialProblem": "NULL",
+      "message_count": "2",
+      "first_user_message": "\"wil ff kletsen\"",
+      "createdAt": "2026-02-10 07:02:52"
+    },
+    {
+      "id": "330003",
+      "themeId": "general",
+      "initialProblem": "NULL",
+      "message_count": "0",
+      "first_user_message": "NULL",
+      "createdAt": "2026-02-10 06:59:58"
+    },
+    {
+      "id": "330002",
+      "themeId": "general",
+      "initialProblem": "NULL",
+      "message_count": "0",
+      "first_user_message": "NULL",
+      "createdAt": "2026-02-10 06:58:00"
+    },
+    {
+      "id": "330001",
+      "themeId": "general",
+      "initialProblem": "NULL",
+      "message_count": "0",
+      "first_user_message": "NULL",
+      "createdAt": "2026-02-10 06:56:22"
+    },
+    {
+      "id": "300006",
+      "themeId": "school",
+      "initialProblem": "NULL",
+      "message_count": "2",
+      "first_user_message": "\"Ik heb problemen met school\"",
+      "createdAt": "2026-02-10 01:21:23"
+    },
+    {
+      "id": "270005",
+      "themeId": "school",
+      "initialProblem": "NULL",
+      "message_count": "0",
+      "first_user_message": "NULL",
+      "createdAt": "2026-02-10 00:21:34"
+    },
+    {
+      "id": "270004",
+      "themeId": "general",
+      "initialProblem": "NULL",
+      "message_count": "2",
+      "first_user_message": "\"Hey Matti, ik heb moeite met leren voor school.\"",
+      "createdAt": "2026-02-10 00:21:00"
+    },
+    {
+      "id": "270002",
+      "themeId": "school",
+      "initialProblem": "NULL",
+      "message_count": "6",
+      "first_user_message": "\"Hey, ik vind het moeilijk om te leren voor school.\"",
+      "createdAt": "2026-02-10 00:04:32"
+    },
+    {
+      "id": "270001",
+      "themeId": "general",
+      "initialProblem": "NULL",
+      "message_count": "2",
+      "first_user_message": "\"Hey Matti, ik zit een beetje met m'n hoofd bij school. Vind het lastig om te leren.\"",
+      "createdAt": "2026-02-09 23:55:01"
+    },
+    {
+      "id": "240003",
+      "themeId": "home",
+      "initialProblem": "NULL",
+      "message_count": "6",
+      "first_user_message": "\"Ik voel me een beetje down vandaag\"",
+      "createdAt": "2026-02-08 15:50:19"
+    },
+    {
+      "id": "240001",
+      "themeId": "general",
+      "initialProblem": "NULL",
+      "message_count": "2",
+      "first_user_message": "\"Hoi Matti, test bericht\"",
+      "createdAt": "2026-02-08 15:47:22"
+    },
+    {
+      "id": "210003",
+      "themeId": "general",
+      "initialProblem": "NULL",
+      "message_count": "6",
+      "first_user_message": "\"hoi matti, ik heb een probleem.. er zijn een paar meiden uit mijn klas die gemene dingen over me posten in een whatsapp groep. Ze delen screenshots van mijn berichten en maken er grappen over. Ik durf niks te zeggen want dan wordt het misschien erger. Ik weet niet wat ik moet doen\"",
+      "createdAt": "2026-02-08 15:17:05"
+    },
+    {
+      "id": "210002",
+      "themeId": "general",
+      "initialProblem": "NULL",
+      "message_count": "0",
+      "first_user_message": "NULL",
+      "createdAt": "2026-02-08 15:10:10"
+    },
+    {
+      "id": "210001",
+      "themeId": "general",
+      "initialProblem": "NULL",
+      "message_count": "8",
+      "first_user_message": "\"hey matti, ik weet niet goed waar ik moet beginnen maar ik voel me de laatste tijd echt niet zo lekker. Er wordt op school over me geroddeld en op instagram worden er screenshots van mijn berichten gedeeld in een groepschat waar ik niet in zit. Een vriendin vertelde het me. Ik durf bijna niet meer naar school en ik check constant mijn telefoon. Mijn ouders merken niks en ik durf het niet te zeggen\"",
+      "createdAt": "2026-02-08 14:53:36"
+    },
+    {
+      "id": "60001",
+      "themeId": "school",
+      "initialProblem": "NULL",
+      "message_count": "2",
+      "first_user_message": "\"hallo\"",
+      "createdAt": "2026-02-02 20:51:51"
+    },
+    {
+      "id": "30002",
+      "themeId": "friends",
+      "initialProblem": "NULL",
+      "message_count": "0",
+      "first_user_message": "NULL",
+      "createdAt": "2026-01-30 22:59:13"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tthemeId\tinitialProblem\tmessage_count\tfirst_user_message\tcreatedAt\n390002\thome\tNULL\t2\t\"Ik heb morgen een toets en ik ben zenuwachtig\"\t2026-02-10 10:22:19\n360001\tfeelings\tGevoelens - school, gepest, moe\t2\t\"Ik word gepest op school. Wat moet ik doen?\"\t2026-02-10 08:55:45\n330004\tgeneral\tNULL\t2\t\"wil ff kletsen\"\t2026-02-10 07:02:52\n330003\tgeneral\tNULL\t0\tNULL\t2026-02-10 06:59:58\n330002\tgeneral\tNULL\t0\tNULL\t2026-02-10 06:58:00\n330001\tgeneral\tNULL\t0\tNULL\t2026-02-10 06:56:22\n300006\tschool\tNULL\t2\t\"Ik heb problemen met school\"\t2026-02-10 01:21:23\n270005\tschool\tNULL\t0\tNULL\t2026-02-10 00:21:34\n270004\tgeneral\tNULL\t2\t\"Hey Matti, ik heb moeite met leren voor school.\"\t2026-02-10 00:21:00\n270002\tschool\tNULL\t6\t\"Hey, ik vind het moeilijk om te leren voor school.\"\t2026-02-10 00:04:32\n270001\tgeneral\tNULL\t2\t\"Hey Matti, ik zit een beetje met m'n hoofd bij school. Vind het lastig om te leren.\"\t2026-02-09 23:55:01\n240003\thome\tNULL\t6\t\"Ik voel me een beetje down vandaag\"\t2026-02-08 15:50:19\n240001\tgeneral\tNULL\t2\t\"Hoi Matti, test bericht\"\t2026-02-08 15:47:22\n210003\tgeneral\tNULL\t6\t\"hoi matti, ik heb een probleem.. er zijn een paar meiden uit mijn klas die gemene dingen over me posten in een whatsapp groep. Ze delen screenshots van mijn berichten en maken er grappen over. Ik durf niks te zeggen want dan wordt het misschien erger. Ik weet niet wat ik moet doen\"\t2026-02-08 15:17:05\n210002\tgeneral\tNULL\t0\tNULL\t2026-02-08 15:10:10\n210001\tgeneral\tNULL\t8\t\"hey matti, ik weet niet goed waar ik moet beginnen maar ik voel me de laatste tijd echt niet zo lekker. Er wordt op school over me geroddeld en op instagram worden er screenshots van mijn berichten gedeeld in een groepschat waar ik niet in zit. Een vriendin vertelde het me. Ik durf bijna niet meer naar school en ik check constant mijn telefoon. Mijn ouders merken niks en ik durf het niet te zeggen\"\t2026-02-08 14:53:36\n60001\tschool\tNULL\t2\t\"hallo\"\t2026-02-02 20:51:51\n30002\tfriends\tNULL\t0\tNULL\t2026-01-30 22:59:13\n",
+  "stderr": "",
+  "execution_time_ms": 342
+}
