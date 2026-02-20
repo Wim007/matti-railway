@@ -28,11 +28,22 @@ const redirectToLoginIfUnauthorized = (error: unknown) => {
   if (!(error instanceof TRPCClientError)) return;
   if (typeof window === "undefined") return;
 
-  const isUnauthorized = error.message === UNAUTHED_ERR_MSG;
+  const message = error.message || "";
+  const hasMattiProfile = Boolean(localStorage.getItem("matti_user_profile"));
+  const isMattiProfileUnauthorized = message.includes("No Matti user ID provided");
+  const isOAuthUnauthorized = message === UNAUTHED_ERR_MSG;
+  const isGenericUnauthorized = error.data?.code === "UNAUTHORIZED";
 
-  if (!isUnauthorized) return;
+  if (!isMattiProfileUnauthorized && !isOAuthUnauthorized && !isGenericUnauthorized) return;
 
-  window.location.href = getLoginUrl();
+  if (isMattiProfileUnauthorized || !hasMattiProfile) {
+    window.location.href = "/";
+    return;
+  }
+
+  if (isOAuthUnauthorized) {
+    window.location.href = getLoginUrl();
+  }
 };
 
 queryClient.getQueryCache().subscribe(event => {

@@ -1,9 +1,9 @@
 import { z } from "zod";
-import { protectedProcedure, router } from "./_core/trpc";
+import { router } from "./_core/trpc";
 import { mattiProcedure } from "./_core/mattiProcedure";
 import { getDb } from "./db";
 import { messageFeedback } from "../drizzle/schema";
-import { eq, desc } from "drizzle-orm";
+import { and, eq, desc } from "drizzle-orm";
 
 /**
  * Feedback Router
@@ -46,20 +46,25 @@ export const feedbackRouter = router({
   /**
    * Get all feedback for a conversation (for debugging/admin)
    */
-  getFeedback: protectedProcedure
+  getFeedback: mattiProcedure
     .input(
       z.object({
         conversationId: z.number(),
       })
     )
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
       
       const feedback = await db
         .select()
         .from(messageFeedback)
-        .where(eq(messageFeedback.conversationId, input.conversationId));
+        .where(
+          and(
+            eq(messageFeedback.conversationId, input.conversationId),
+            eq(messageFeedback.userId, ctx.user.id)
+          )
+        );
 
       return feedback;
     }),
@@ -67,7 +72,7 @@ export const feedbackRouter = router({
   /**
    * Get all feedback with pagination and filters (for dashboard)
    */
-  getAllFeedback: protectedProcedure
+  getAllFeedback: mattiProcedure
     .input(
       z.object({
         rating: z.enum(["all", "up", "down"]).optional(),
@@ -75,29 +80,30 @@ export const feedbackRouter = router({
         offset: z.number().min(0).default(0),
       })
     )
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
 
-      let query = db.select().from(messageFeedback);
+      const conditions = [eq(messageFeedback.userId, ctx.user.id)];
 
-      // Apply rating filter
       if (input.rating && input.rating !== "all") {
-        query = query.where(eq(messageFeedback.rating, input.rating)) as any;
+        conditions.push(eq(messageFeedback.rating, input.rating));
       }
 
-      // Apply ordering and pagination
-      const feedback = await query
+      const feedback = await db
+        .select()
+        .from(messageFeedback)
+        .where(and(...conditions))
         .orderBy(desc(messageFeedback.createdAt))
         .limit(input.limit)
         .offset(input.offset);
 
-      // Get total count for pagination
-      const countQuery = input.rating && input.rating !== "all"
-        ? db.select().from(messageFeedback).where(eq(messageFeedback.rating, input.rating))
-        : db.select().from(messageFeedback);
-      
-      const totalCount = (await countQuery).length;
+      const totalCount = (
+        await db
+          .select()
+          .from(messageFeedback)
+          .where(and(...conditions))
+      ).length;
 
       return {
         feedback,
@@ -109,11 +115,14 @@ export const feedbackRouter = router({
   /**
    * Get feedback statistics
    */
-  getStatistics: protectedProcedure.query(async () => {
+  getStatistics: mattiProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
 
-    const allFeedback = await db.select().from(messageFeedback);
+    const allFeedback = await db
+      .select()
+      .from(messageFeedback)
+      .where(eq(messageFeedback.userId, ctx.user.id));
     
     const totalCount = allFeedback.length;
     const upCount = allFeedback.filter(f => f.rating === "up").length;
@@ -131,15 +140,19 @@ export const feedbackRouter = router({
   /**
    * Get all negative feedback (for owner dashboard)
    */
-  getNegativeFeedback: protectedProcedure.query(async ({ ctx }) => {
-    // Only allow owner to view all feedback
+  getNegativeFeedback: mattiProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
     
     const feedback = await db
       .select()
       .from(messageFeedback)
-      .where(eq(messageFeedback.rating, "down"))
+      .where(
+        and(
+          eq(messageFeedback.rating, "down"),
+          eq(messageFeedback.userId, ctx.user.id)
+        )
+      )
       .orderBy(desc(messageFeedback.createdAt))
       .limit(100);
 

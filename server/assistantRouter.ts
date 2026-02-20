@@ -154,8 +154,6 @@ export const assistantRouter = router({
         const riskDetection = detectRisk(reply);
         const isCrisisResponse = detectCrisisResponse(reply);
         
-        // Detect theme from conversation
-        const conversationMessages = messages.filter(m => m.role !== 'system');
         // Detect theme from user message content
         const themeDetection = detectTheme(input.message);
         const detectedTheme = themeDetection.theme;

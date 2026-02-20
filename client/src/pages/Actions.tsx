@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { THEMES } from "@shared/matti-types";
 import { Button } from "@/components/ui/button";
@@ -8,17 +7,15 @@ import { CheckCircle2, Circle, XCircle, TrendingUp } from "lucide-react";
 import confetti from "canvas-confetti";
 
 export default function Actions() {
-  const { user } = useAuth();
   const [filter, setFilter] = useState<"all" | "pending" | "completed" | "cancelled">("all");
 
   // Fetch actions
-  const { data: actions = [], refetch } = trpc.action.getActions.useQuery(
-    { status: filter === "all" ? undefined : filter },
-    { enabled: !!user }
+  const { data: actions = [], refetch, isLoading: actionsLoading } = trpc.action.getActions.useQuery(
+    { status: filter === "all" ? undefined : filter }
   );
 
   // Fetch stats
-  const { data: stats } = trpc.action.getActionStats.useQuery(undefined, { enabled: !!user });
+  const { data: stats, isLoading: statsLoading } = trpc.action.getActionStats.useQuery();
 
   // Update action status mutation
   const updateStatus = trpc.action.updateActionStatus.useMutation({
@@ -63,7 +60,7 @@ export default function Actions() {
     return date.toLocaleDateString("nl-NL", { day: "numeric", month: "short" });
   };
 
-  const isLoading = !user || !actions || !stats;
+  const isLoading = actionsLoading || statsLoading;
 
   if (isLoading) {
     return (

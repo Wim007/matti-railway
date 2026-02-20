@@ -1,4 +1,3 @@
-import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { THEMES, type ThemeId } from "@shared/matti-types";
 import { useMattiTheme } from "@/contexts/MattiThemeContext";
@@ -8,14 +7,10 @@ import { formatDistanceToNow } from "date-fns";
 import { nl } from "date-fns/locale";
 
 export default function History() {
-  const { user } = useAuth();
   const { setCurrentThemeId } = useMattiTheme();
   const [, setLocation] = useLocation();
 
-  const { data: conversations, isLoading } = trpc.chat.getAllConversations.useQuery(
-    undefined,
-    { enabled: !!user }
-  );
+  const { data: conversations, isLoading } = trpc.chat.getAllConversations.useQuery();
 
   const handleResumeConversation = (themeId: ThemeId) => {
     setCurrentThemeId(themeId);

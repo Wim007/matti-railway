@@ -1,13 +1,13 @@
 import { useState, useRef, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
-import { THEMES, type ThemeId, type ChatMessage } from "@shared/matti-types";
+import { THEMES, type ThemeId, type ChatMessage, type UserProfile } from "@shared/matti-types";
 import { useMattiTheme } from "@/contexts/MattiThemeContext";
 import { detectActionIntelligent } from "@shared/action-detection";
 import { generateWelcomeMessage } from "@shared/welcome-message";
 import { toast } from "sonner";
 
 // Helper to get user profile from localStorage
-function getUserProfile() {
+function getUserProfile(): UserProfile | null {
   const profileData = localStorage.getItem("matti_user_profile");
   if (!profileData) return null;
   try {
@@ -19,14 +19,12 @@ function getUserProfile() {
 }
 
 export default function Chat() {
-  const [userProfile, setUserProfile] = useState(getUserProfile());
+  const [userProfile] = useState<UserProfile | null>(() => getUserProfile());
   const { currentThemeId, setCurrentThemeId } = useMattiTheme();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-
-  const currentTheme = THEMES.find((t) => t.id === currentThemeId)!;
 
   // Fetch conversation for current theme
   const { data: conversation, refetch: refetchConversation, isLoading: conversationLoading, isError: conversationError } = trpc.chat.getConversation.useQuery(
@@ -205,7 +203,7 @@ export default function Chat() {
         message: messageText,
         context,
         themeId: currentThemeId,
-        userProfile: userProfile.age && userProfile.gender && userProfile.gender !== "none"
+        userProfile: userProfile.age && userProfile.gender
           ? {
               name: userProfile.name || "",
               age: userProfile.age,
@@ -216,38 +214,65 @@ export default function Chat() {
         crisisGuidance: crisisGuidance || undefined,
       });
 
+      if (response.riskDetected && response.riskLevel && response.riskType && conversation) {
+        trackRiskDetected.mutate({
+          conversationId: conversation.id,
+          riskLevel: response.riskLevel,
+          riskType: response.riskType,
+          actionTaken: "Crisisprotocol toegepast in AI response",
+          detectedText: messageText,
+        });
+      }
+
+      if (
+        userProfile?.themeSuggestionsEnabled !== false &&
+        response.detectedTheme &&
+        response.detectedTheme !== currentThemeId
+      ) {
+        const suggestedTheme = THEMES.find((theme) => theme.id === response.detectedTheme);
+        if (suggestedTheme) {
+          toast("Thema suggestie", {
+            description: `Dit lijkt beter te passen bij ${suggestedTheme.emoji} ${suggestedTheme.name}.`,
+            action: {
+              label: "Wissel",
+              onClick: () => setCurrentThemeId(response.detectedTheme as ThemeId),
+            },
+          });
+        }
+      }
+
+      const detectedAction = detectActionIntelligent(response.reply);
+      const assistantReply = detectedAction?.cleanResponse ?? response.reply;
+
       if (!conversation) {
         throw new Error("No active conversation");
       }
       await saveMessage.mutateAsync({
         conversationId: conversation.id,
         role: "assistant",
-        content: response.reply,
+        content: assistantReply,
         threadId: conversation.threadId || undefined,
       });
       
       const aiMsg: ChatMessage = {
         id: Date.now().toString(),
-        content: response.reply,
+        content: assistantReply,
         isAI: true,
         timestamp: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, aiMsg]);
 
-      const detectedAction = detectActionIntelligent(messageText, response.reply);
       if (detectedAction) {
-        console.log(`[Action Detection] Detected action: ${detectedAction.type}`);
+        console.log(`[Action Detection] Detected action: ${detectedAction.actionText}`);
         
         await saveAction.mutateAsync({
+          themeId: currentThemeId,
           conversationId: conversation.id,
-          actionType: detectedAction.type,
-          description: detectedAction.description,
-          status: "pending",
-          priority: detectedAction.priority,
+          actionText: detectedAction.actionText,
         });
 
         toast.success("Actie gedetecteerd!", {
-          description: `${detectedAction.description} is toegevoegd aan je actielijst.`,
+          description: `${detectedAction.actionText} is toegevoegd aan je actielijst.`,
         });
       }
 
@@ -256,16 +281,25 @@ export default function Chat() {
         
         const allMessages = [...(conversation.messages as Array<{ role: string; content: string }>), 
           { role: "user", content: messageText },
-          { role: "assistant", content: response.reply }
+          { role: "assistant", content: assistantReply }
         ];
         
+        const summaryPrompt = [
+          "Vat dit gesprek kort samen in het Nederlands.",
+          "",
+          "Bestaande samenvatting:",
+          conversation.summary || "Geen",
+          "",
+          "Nieuwe berichten:",
+          allMessages.map(m => `${m.role === "user" ? "Gebruiker" : "Matti"}: ${m.content}`).join("\n"),
+        ].join("\n");
+        
         const summaryResult = await summarize.mutateAsync({
-          messages: allMessages.map(m => `${m.role === "user" ? "Gebruiker" : "Matti"}: ${m.content}`).join("\n"),
-          existingSummary: conversation.summary || undefined,
+          prompt: summaryPrompt,
         });
 
         await updateSummary.mutateAsync({
-          conversationId: conversation.id,
+          themeId: currentThemeId,
           summary: summaryResult.summary,
         });
 

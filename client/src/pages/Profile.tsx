@@ -8,10 +8,21 @@ export default function Profile() {
   useEffect(() => {
     const stored = localStorage.getItem("matti_user_profile");
     if (stored) {
-      setProfile(JSON.parse(stored));
+      try {
+        setProfile(JSON.parse(stored));
+      } catch (error) {
+        console.error("Kon profiel niet laden:", error);
+      }
     }
     setIsLoading(false);
   }, []);
+
+  const updateProfile = (updates: Partial<UserProfile>) => {
+    if (!profile) return;
+    const updatedProfile = { ...profile, ...updates };
+    setProfile(updatedProfile);
+    localStorage.setItem("matti_user_profile", JSON.stringify(updatedProfile));
+  };
 
   const handleLogout = () => {
     if (confirm("Weet je zeker dat je wilt uitloggen?")) {
@@ -93,7 +104,7 @@ export default function Profile() {
               <h2 className="text-xl font-bold text-foreground mb-4">
                 Instellingen
               </h2>
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-base font-semibold text-foreground">
@@ -103,9 +114,51 @@ export default function Profile() {
                       Anonieme data delen voor onderzoek
                     </p>
                   </div>
-                  <span className="text-lg">
-                    {profile.analyticsConsent ? "✅" : "❌"}
-                  </span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      updateProfile({ analyticsConsent: !profile.analyticsConsent })
+                    }
+                    className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${
+                      profile.analyticsConsent ? "bg-primary" : "bg-muted"
+                    }`}
+                    aria-label="Toggle analytics toestemming"
+                  >
+                    <span
+                      className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                        profile.analyticsConsent ? "translate-x-6" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-base font-semibold text-foreground">
+                      Thema suggesties
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Laat Matti een beter passend thema voorstellen
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      updateProfile({
+                        themeSuggestionsEnabled: !(profile.themeSuggestionsEnabled ?? true),
+                      })
+                    }
+                    className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${
+                      (profile.themeSuggestionsEnabled ?? true) ? "bg-primary" : "bg-muted"
+                    }`}
+                    aria-label="Toggle thema suggesties"
+                  >
+                    <span
+                      className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                        (profile.themeSuggestionsEnabled ?? true) ? "translate-x-6" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
                 </div>
               </div>
             </div>

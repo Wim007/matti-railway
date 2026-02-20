@@ -3,7 +3,7 @@ import { router } from "./_core/trpc";
 import { mattiProcedure } from "./_core/mattiProcedure";
 import { getDb } from "./db";
 import { actions, followUps } from "../drizzle/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, lte } from "drizzle-orm";
 import type { ThemeId } from "@shared/matti-types";
 import { notifyOwner } from "./_core/notification";
 
@@ -52,20 +52,23 @@ export const actionRouter = router({
       const { themeId, actionText, conversationId } = input;
 
       // Create action
-      const result = await db.insert(actions).values({
-        userId,
-        themeId: themeId as ThemeId,
-        actionText,
-        conversationId,
-        status: "pending",
-        followUpIntervals: FOLLOW_UP_INTERVALS,
-      });
+      const inserted = await db
+        .insert(actions)
+        .values({
+          userId,
+          themeId: themeId as ThemeId,
+          actionText,
+          conversationId,
+          status: "pending",
+          followUpIntervals: FOLLOW_UP_INTERVALS,
+        })
+        .returning({ id: actions.id });
 
-      const actionId = Number((result as any).insertId);
+      const actionId = inserted[0]?.id;
 
       // Validate actionId before scheduling follow-ups
-      if (!actionId || isNaN(actionId)) {
-        console.error("[ActionTracking] Invalid actionId:", actionId, "Result:", result);
+      if (!actionId || Number.isNaN(actionId)) {
+        console.error("[ActionTracking] Invalid actionId:", actionId, "Result:", inserted);
         throw new Error("Failed to create action: invalid actionId");
       }
 
@@ -254,7 +257,7 @@ export const actionRouter = router({
         .where(and(
           eq(actions.userId, userId),
           eq(followUps.status, "pending"),
-          // scheduledFor <= now
+          lte(followUps.scheduledFor, now)
         ))
         .orderBy(followUps.scheduledFor);
 

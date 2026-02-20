@@ -73,6 +73,7 @@ export default function Account() {
       postalCode: postalCode.toUpperCase().replace(/\s/g, ""),
       gender: selectedGender,
       analyticsConsent,
+      themeSuggestionsEnabled: true,
       createdAt: new Date().toISOString(),
     };
     localStorage.setItem("matti_user_profile", JSON.stringify(profile));
