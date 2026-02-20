@@ -51,7 +51,7 @@ export default function History() {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
-        <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full"></div>
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
       </div>
     );
   }
@@ -60,24 +60,24 @@ export default function History() {
     return (
       <div className="h-screen flex flex-col">
         {/* Header */}
-        <div className="px-6 py-4" style={{background: 'linear-gradient(90deg, #c7b8ff 0%, #aaf2f3 100%)'}}>
-          <h1 className="text-2xl font-bold text-white">Geschiedenis</h1>
+        <div className="bg-primary px-6 py-4">
+          <h1 className="text-2xl font-bold text-primary-foreground">Geschiedenis</h1>
         </div>
 
         {/* Empty State */}
-        <div className="flex-1 flex flex-col items-center justify-center px-6" style={{backgroundColor: '#f5f9ff'}}>
-          <div className="w-24 h-24 bg-purple-100 rounded-full flex items-center justify-center mb-6">
-            <MessageSquare className="w-12 h-12 text-purple-600" />
+        <div className="flex-1 flex flex-col items-center justify-center px-6 bg-background">
+          <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mb-6">
+            <MessageSquare className="w-12 h-12 text-primary" />
           </div>
-          <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+          <h2 className="text-2xl font-semibold text-foreground mb-2">
             Nog geen gesprekken
           </h2>
-          <p className="text-gray-600 text-center max-w-md mb-8">
+          <p className="text-muted-foreground text-center max-w-md mb-8">
             Start een gesprek met Matti over een thema dat je bezighoudt. Je gesprekken worden hier bewaard.
           </p>
           <button
             onClick={() => setLocation("/chat")}
-            className="px-6 py-3 text-white rounded-xl font-medium hover:opacity-90 transition-all shadow-lg" style={{background: 'linear-gradient(90deg, #c7b8ff 0%, #aaf2f3 100%)'}}
+            className="px-6 py-3 bg-primary text-primary-foreground rounded-xl font-medium hover:opacity-90 transition-all shadow-lg"
           >
             Start een gesprek
           </button>
@@ -92,12 +92,12 @@ export default function History() {
   return (
     <div className="h-screen flex flex-col">
       {/* Header */}
-      <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-4">
-        <h1 className="text-2xl font-bold text-white">Geschiedenis</h1>
+      <div className="bg-primary px-6 py-4">
+        <h1 className="text-2xl font-bold text-primary-foreground">Geschiedenis</h1>
       </div>
 
       {/* Content */}
-      <div className="flex-1 px-4 py-6 overflow-y-auto" style={{backgroundColor: '#e5f0ff'}}>
+      <div className="flex-1 px-4 py-6 overflow-y-auto bg-background">
         <div className="space-y-8 max-w-2xl mx-auto">
           {groupOrder.map((groupName) => {
             const groupConvos = groupedConversations?.[groupName];
@@ -105,7 +105,7 @@ export default function History() {
 
             return (
               <div key={groupName}>
-                <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3 px-2">
+                <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3 px-2">
                   {groupName}
                 </h2>
                 <div className="space-y-3">
@@ -119,7 +119,7 @@ export default function History() {
                       <button
                         key={convo.id}
                         onClick={() => handleResumeConversation(convo.themeId)}
-                        className="w-full bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all border border-gray-100 text-left group" style={{backgroundColor: '#f3d3ef'}}
+                        className="w-full bg-card rounded-xl p-4 shadow-sm hover:shadow-md hover:bg-muted transition-all border border-border text-left group"
                       >
                         <div className="flex items-start gap-3">
                           {/* Theme Icon */}
@@ -135,10 +135,10 @@ export default function History() {
                           {/* Content */}
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between mb-1">
-                              <h3 className="font-semibold text-gray-900 group-hover:text-purple-600 transition-colors">
+                              <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
                                 {theme.name}
                               </h3>
-                              <div className="flex items-center gap-1 text-xs text-gray-500">
+                              <div className="flex items-center gap-1 text-xs text-muted-foreground">
                                 <Clock className="w-3 h-3" />
                                 <span>
                                   {formatDistanceToNow(new Date(convo.updatedAt), {
@@ -151,17 +151,17 @@ export default function History() {
 
                             {/* Summary Preview */}
                             {convo.summary ? (
-                              <p className="text-sm text-gray-600 line-clamp-2 mb-2">
+                              <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
                                 {convo.summary}
                               </p>
                             ) : (
-                              <p className="text-sm text-gray-400 italic mb-2">
+                              <p className="text-sm text-muted-foreground italic mb-2">
                                 Nog geen samenvatting
                               </p>
                             )}
 
                             {/* Message Count */}
-                            <div className="flex items-center gap-2 text-xs text-gray-500">
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
                               <MessageSquare className="w-3 h-3" />
                               <span>{convo.messageCount} berichten</span>
                             </div>
@@ -193,18 +193,18 @@ function TabNavigation({ currentTab }: { currentTab: string }) {
   ];
 
   return (
-    <div className="border-t border-gray-200 bg-white">
+    <div className="border-t border-border bg-background">
       <div className="flex items-center justify-around py-2">
         {tabs.map((tab) => (
           <a
             key={tab.id}
             href={tab.path}
-            className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-opacity ${
-              currentTab === tab.id ? "opacity-100" : "opacity-50 hover:opacity-75"
+            className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
+              currentTab === tab.id ? "text-foreground opacity-100" : "text-muted-foreground opacity-80 hover:opacity-100"
             }`}
           >
             <span className="text-xl">{tab.icon}</span>
-            <span className="text-xs font-medium text-gray-700">
+            <span className="text-xs font-medium">
               {tab.label}
             </span>
           </a>

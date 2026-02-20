@@ -23,7 +23,7 @@ export default function Profile() {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
-        <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full"></div>
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
       </div>
     );
   }
@@ -31,16 +31,16 @@ export default function Profile() {
   return (
     <div className="h-screen flex flex-col">
       {/* Header */}
-      <div className="px-6 py-4" style={{background: 'linear-gradient(90deg, #c7b8ff 0%, #aaf2f3 100%)'}}>
-        <h1 className="text-2xl font-bold text-white">Profiel</h1>
+      <div className="bg-primary px-6 py-4">
+        <h1 className="text-2xl font-bold text-primary-foreground">Profiel</h1>
       </div>
 
       {/* Content */}
-      <div className="flex-1 px-6 py-6 overflow-y-auto" style={{backgroundColor: '#f5f9ff'}}>
+      <div className="flex-1 px-6 py-6 overflow-y-auto bg-background">
         {profile ? (
           <div className="max-w-2xl mx-auto space-y-6">
             {/* User Info Card */}
-            <div className="bg-surface border border-border rounded-2xl p-6">
+            <div className="bg-card border border-border rounded-2xl p-6">
               <h2 className="text-xl font-bold text-foreground mb-4">
                 Jouw gegevens
               </h2>
@@ -89,7 +89,7 @@ export default function Profile() {
             </div>
 
             {/* Settings Card */}
-            <div className="bg-surface border border-border rounded-2xl p-6">
+            <div className="bg-card border border-border rounded-2xl p-6">
               <h2 className="text-xl font-bold text-foreground mb-4">
                 Instellingen
               </h2>
@@ -113,7 +113,7 @@ export default function Profile() {
             {/* Feedback Dashboard Button (for owner) */}
             <button
               onClick={() => window.location.href = '/feedback-dashboard'}
-              className="w-full bg-[#150745] text-white font-bold text-lg px-8 py-4 rounded-full hover:opacity-90 transition-opacity mb-4"
+              className="w-full bg-secondary text-secondary-foreground font-bold text-lg px-8 py-4 rounded-full hover:opacity-90 transition-opacity mb-4"
             >
               📊 Feedback Dashboard
             </button>
@@ -121,7 +121,7 @@ export default function Profile() {
             {/* Logout Button */}
             <button
               onClick={handleLogout}
-              className="w-full bg-destructive text-white font-bold text-lg px-8 py-4 rounded-full hover:opacity-90 transition-opacity"
+              className="w-full bg-destructive text-destructive-foreground font-bold text-lg px-8 py-4 rounded-full hover:opacity-90 transition-opacity"
             >
               Uitloggen
             </button>
@@ -156,12 +156,12 @@ function TabNavigation({ currentTab }: { currentTab: string }) {
           <a
             key={tab.id}
             href={tab.path}
-            className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-opacity ${
-              currentTab === tab.id ? "opacity-100" : "opacity-50 hover:opacity-75"
+            className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
+              currentTab === tab.id ? "text-foreground opacity-100" : "text-muted-foreground opacity-80 hover:opacity-100"
             }`}
           >
             <span className="text-xl">{tab.icon}</span>
-            <span className="text-xs font-medium text-foreground">
+            <span className="text-xs font-medium">
               {tab.label}
             </span>
           </a>

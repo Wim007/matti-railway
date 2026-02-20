@@ -15,7 +15,7 @@ export default function ParentInfo() {
         {/* Content */}
         <div className="space-y-6">
           {/* What is Matti */}
-          <div className="bg-surface border border-border rounded-2xl p-6" style={{backgroundColor: '#baf2d8'}}>
+          <div className="bg-card border border-border rounded-2xl p-6">
             <h2 className="text-xl font-bold text-foreground mb-3 flex items-center gap-2">
               <span>🤖</span>
               Wat is Matti?
@@ -29,7 +29,7 @@ export default function ParentInfo() {
           </div>
 
           {/* Privacy & Security */}
-          <div className="bg-surface border border-border rounded-2xl p-6" style={{backgroundColor: '#baf2d8'}}>
+          <div className="bg-card border border-border rounded-2xl p-6">
             <h2 className="text-xl font-bold text-foreground mb-3 flex items-center gap-2">
               <span>🔒</span>
               Privacy & Veiligheid
@@ -66,7 +66,7 @@ export default function ParentInfo() {
           </div>
 
           {/* How it works */}
-          <div className="bg-surface border border-border rounded-2xl p-6" style={{backgroundColor: '#baf2d8'}}>
+          <div className="bg-card border border-border rounded-2xl p-6">
             <h2 className="text-xl font-bold text-foreground mb-3 flex items-center gap-2">
               <span>⚙️</span>
               Hoe werkt het?
@@ -134,7 +134,7 @@ export default function ParentInfo() {
           </div>
 
           {/* Action & Follow-up */}
-          <div className="bg-surface border border-border rounded-2xl p-6" style={{backgroundColor: '#baf2d8'}}>
+          <div className="bg-card border border-border rounded-2xl p-6">
             <h2 className="text-xl font-bold text-foreground mb-3 flex items-center gap-2">
               <span>💪</span>
               Actie & Opvolging
@@ -148,7 +148,7 @@ export default function ParentInfo() {
           </div>
 
           {/* Contact */}
-          <div className="bg-surface border border-border rounded-2xl p-6" style={{backgroundColor: '#baf2d8'}}>
+          <div className="bg-card border border-border rounded-2xl p-6">
             <h2 className="text-xl font-bold text-foreground mb-3 flex items-center gap-2">
               <span>📧</span>
               Vragen of zorgen?
@@ -170,7 +170,7 @@ export default function ParentInfo() {
         <div className="mt-8">
           <a
             href="/"
-            className="inline-block bg-primary text-white font-bold text-lg px-8 py-4 rounded-full hover:opacity-90 transition-opacity"
+            className="inline-block bg-primary text-primary-foreground font-bold text-lg px-8 py-4 rounded-full hover:opacity-90 transition-opacity"
           >
             ← Terug naar start
           </a>
