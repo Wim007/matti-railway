@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { CheckCircle2, Circle, XCircle, TrendingUp } from "lucide-react";
 import confetti from "canvas-confetti";
+import BottomNavigation from "@/components/BottomNavigation";
 
 export default function Actions() {
   const [filter, setFilter] = useState<"all" | "pending" | "completed" | "cancelled">("all");
@@ -71,7 +72,8 @@ export default function Actions() {
   }
 
   return (
-    <div className="min-h-screen pb-20 bg-background">
+    <div className="h-screen flex flex-col bg-background">
+      <div className="flex-1 overflow-y-auto">
       {/* Header */}
       <div className="bg-primary text-primary-foreground p-6 pb-8">
         <h1 className="text-2xl font-bold mb-2">💪 Mijn Acties</h1>
@@ -217,8 +219,10 @@ export default function Actions() {
         )}
       </div>
 
-      {/* Bottom Navigation Spacer */}
-      <div className="h-20" />
+      {/* Bottom spacing for comfortable scroll */}
+      <div className="h-4" />
+      </div>
+      <BottomNavigation />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import type { UserProfile } from "@shared/matti-types";
+import BottomNavigation from "@/components/BottomNavigation";
 
 export default function Profile() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -187,39 +188,7 @@ export default function Profile() {
         )}
       </div>
 
-      {/* Bottom Tab Navigation */}
-      <TabNavigation currentTab="profile" />
-    </div>
-  );
-}
-
-function TabNavigation({ currentTab }: { currentTab: string }) {
-  const tabs = [
-    { id: "chat", label: "Chat", icon: "💬", path: "/chat" },
-    { id: "history", label: "Geschiedenis", icon: "📜", path: "/history" },
-
-    { id: "profile", label: "Profiel", icon: "👤", path: "/profile" },
-    { id: "actions", label: "Acties", icon: "💪", path: "/actions" },
-  ];
-
-  return (
-    <div className="border-t border-border bg-background">
-      <div className="flex items-center justify-around py-2">
-        {tabs.map((tab) => (
-          <a
-            key={tab.id}
-            href={tab.path}
-            className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
-              currentTab === tab.id ? "text-foreground opacity-100" : "text-muted-foreground opacity-80 hover:opacity-100"
-            }`}
-          >
-            <span className="text-xl">{tab.icon}</span>
-            <span className="text-xs font-medium">
-              {tab.label}
-            </span>
-          </a>
-        ))}
-      </div>
+      <BottomNavigation />
     </div>
   );
 }

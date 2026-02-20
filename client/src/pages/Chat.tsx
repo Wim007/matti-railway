@@ -5,6 +5,7 @@ import { useMattiTheme } from "@/contexts/MattiThemeContext";
 import { detectActionIntelligent } from "@shared/action-detection";
 import { generateWelcomeMessage } from "@shared/welcome-message";
 import { toast } from "sonner";
+import BottomNavigation from "@/components/BottomNavigation";
 
 // Helper to get user profile from localStorage
 function getUserProfile(): UserProfile | null {
@@ -393,6 +394,8 @@ export default function Chat() {
           </button>
         </div>
       </div>
+
+      <BottomNavigation />
     </div>
   );
 }
