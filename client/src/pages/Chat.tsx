@@ -140,6 +140,68 @@ export default function Chat() {
     }
   }, [conversation, sessionStartTracked, userProfile, currentThemeId]);
 
+  const handleFeedbackClick = async (
+    messageId: string,
+    messageIndex: number,
+    rating: "up" | "down"
+  ) => {
+    if (!conversation) return;
+
+    if (rating === "up") {
+      try {
+        await submitFeedback.mutateAsync({
+          conversationId: conversation.id,
+          messageIndex,
+          rating: "up",
+        });
+        setFeedbackState((prev) => ({
+          ...prev,
+          [messageId]: { rating: "up", showInput: false, text: "" },
+        }));
+        toast.success("Bedankt voor je feedback!");
+      } catch (error) {
+        console.error("Failed to submit thumbs up feedback:", error);
+        toast.error("Kon feedback niet opslaan. Probeer het opnieuw.");
+      }
+      return;
+    }
+
+    setFeedbackState((prev) => ({
+      ...prev,
+      [messageId]: {
+        rating: "down",
+        showInput: true,
+        text: prev[messageId]?.text || "",
+      },
+    }));
+  };
+
+  const handleSubmitNegativeFeedback = async (
+    messageId: string,
+    messageIndex: number
+  ) => {
+    if (!conversation) return;
+    const current = feedbackState[messageId];
+    if (!current) return;
+
+    try {
+      await submitFeedback.mutateAsync({
+        conversationId: conversation.id,
+        messageIndex,
+        rating: "down",
+        feedbackText: current.text.trim() || undefined,
+      });
+      setFeedbackState((prev) => ({
+        ...prev,
+        [messageId]: { rating: "down", showInput: false, text: "" },
+      }));
+      toast.success("Dank je, je feedback is opgeslagen.");
+    } catch (error) {
+      console.error("Failed to submit thumbs down feedback:", error);
+      toast.error("Kon feedback niet opslaan. Probeer het opnieuw.");
+    }
+  };
+
   const handleSendMessage = async () => {
     if (!inputText.trim() || !userProfile) return;
 
@@ -349,14 +411,93 @@ export default function Chat() {
     <div className="flex flex-col h-screen bg-background">
       {/* Chat messages area */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((msg) => (
+        {messages.map((msg, index) => (
           <div key={msg.id} className={`flex ${msg.isAI ? "justify-start" : "justify-end"}`}>
-            <div className={`max-w-[80%] rounded-lg p-3 ${
-              msg.isAI 
-                ? "bg-secondary text-secondary-foreground" 
-                : "bg-primary text-primary-foreground"
-            }`}>
-              <p className="whitespace-pre-wrap">{msg.content}</p>
+            <div className="max-w-[80%]">
+              <div className={`rounded-lg p-3 ${
+                msg.isAI 
+                  ? "bg-secondary text-secondary-foreground" 
+                  : "bg-primary text-primary-foreground"
+              }`}>
+                <p className="whitespace-pre-wrap">{msg.content}</p>
+              </div>
+
+              {msg.isAI && (
+                <div className="mt-2">
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleFeedbackClick(msg.id, index, "up")}
+                      disabled={submitFeedback.isPending}
+                      className={`text-xs px-2 py-1 rounded-md border transition-colors ${
+                        feedbackState[msg.id]?.rating === "up"
+                          ? "bg-green-100 border-green-300 text-green-700"
+                          : "bg-background border-border text-muted-foreground hover:bg-muted"
+                      }`}
+                    >
+                      👍
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleFeedbackClick(msg.id, index, "down")}
+                      disabled={submitFeedback.isPending}
+                      className={`text-xs px-2 py-1 rounded-md border transition-colors ${
+                        feedbackState[msg.id]?.rating === "down"
+                          ? "bg-red-100 border-red-300 text-red-700"
+                          : "bg-background border-border text-muted-foreground hover:bg-muted"
+                      }`}
+                    >
+                      👎
+                    </button>
+                  </div>
+
+                  {feedbackState[msg.id]?.showInput && (
+                    <div className="mt-2 space-y-2">
+                      <textarea
+                        value={feedbackState[msg.id]?.text || ""}
+                        onChange={(e) =>
+                          setFeedbackState((prev) => ({
+                            ...prev,
+                            [msg.id]: {
+                              rating: "down",
+                              showInput: true,
+                              text: e.target.value,
+                            },
+                          }))
+                        }
+                        placeholder="Wat ging er niet goed?"
+                        className="w-full min-h-20 px-3 py-2 text-sm rounded-md border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleSubmitNegativeFeedback(msg.id, index)}
+                          disabled={submitFeedback.isPending}
+                          className="px-3 py-1.5 text-xs bg-primary text-primary-foreground rounded-md disabled:opacity-50"
+                        >
+                          Verstuur feedback
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setFeedbackState((prev) => ({
+                              ...prev,
+                              [msg.id]: {
+                                rating: prev[msg.id]?.rating || null,
+                                showInput: false,
+                                text: prev[msg.id]?.text || "",
+                              },
+                            }))
+                          }
+                          className="px-3 py-1.5 text-xs border border-border rounded-md text-muted-foreground hover:bg-muted"
+                        >
+                          Annuleren
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         ))}
