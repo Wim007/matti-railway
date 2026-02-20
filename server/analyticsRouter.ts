@@ -1,6 +1,7 @@
 import { z } from "zod";
-import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
+import { publicProcedure, router } from "./_core/trpc";
 import { TRPCError } from "@trpc/server";
+import { mattiProcedure } from "./_core/mattiProcedure";
 import { getDb } from "./db";
 import { analytics } from "../drizzle/schema";
 import { eq, and } from "drizzle-orm";
@@ -86,12 +87,19 @@ async function sendEventToDashboard(eventType: string, eventData: any) {
   }
 }
 
+function parseNumericUserId(userId: unknown): number | null {
+  if (typeof userId === "number" && Number.isInteger(userId)) return userId;
+  if (typeof userId !== "string") return null;
+  const parsed = Number.parseInt(userId, 10);
+  return Number.isNaN(parsed) ? null : parsed;
+}
+
 export const analyticsRouter = router({
   /**
    * Track SESSION_START event
    * Triggered when user starts a new chat session
    */
-  trackSessionStart: protectedProcedure
+  trackSessionStart: mattiProcedure
     .input(
       z.object({
         conversationId: z.number(),
@@ -130,10 +138,15 @@ export const analyticsRouter = router({
 
       // Store in local analytics table
       try {
+        const numericUserId = parseNumericUserId(user.id);
+        if (numericUserId === null) {
+          console.warn(`[Analytics] Skipping local analytics insert for non-numeric user id: ${String(user.id)}`);
+          return { success: true };
+        }
         const db = await getDb();
         if (!db) return { success: true };
         await db.insert(analytics).values({
-          userId: user.id,
+          userId: numericUserId,
           conversationId,
           themeId: themeId as any,
           messageCount: 0,
@@ -151,7 +164,7 @@ export const analyticsRouter = router({
    * Track MESSAGE_SENT event
    * Triggered every time user sends a message
    */
-  trackMessageSent: protectedProcedure
+  trackMessageSent: mattiProcedure
     .input(
       z.object({
         conversationId: z.number(),
@@ -177,6 +190,10 @@ export const analyticsRouter = router({
 
       // Update message count in analytics table
       try {
+        const numericUserId = parseNumericUserId(user.id);
+        if (numericUserId === null) {
+          return { success: true };
+        }
         const db = await getDb();
         if (!db) return { success: true };
         const existing = await db
@@ -184,7 +201,7 @@ export const analyticsRouter = router({
           .from(analytics)
           .where(
             and(
-              eq(analytics.userId, user.id),
+              eq(analytics.userId, numericUserId),
               eq(analytics.conversationId, conversationId)
             )
           )
@@ -207,7 +224,7 @@ export const analyticsRouter = router({
    * Track RISK_DETECTED event
    * Triggered when AI detects crisis signals
    */
-  trackRiskDetected: protectedProcedure
+  trackRiskDetected: mattiProcedure
     .input(
       z.object({
         conversationId: z.number(),
@@ -242,7 +259,7 @@ export const analyticsRouter = router({
    * Track SESSION_END event
    * Triggered when user closes chat or session times out
    */
-  trackSessionEnd: protectedProcedure
+  trackSessionEnd: mattiProcedure
     .input(
       z.object({
         conversationId: z.number(),
@@ -268,6 +285,10 @@ export const analyticsRouter = router({
 
       // Update analytics table with final stats
       try {
+        const numericUserId = parseNumericUserId(user.id);
+        if (numericUserId === null) {
+          return { success: true };
+        }
         const db = await getDb();
         if (!db) return { success: true };
         const existing = await db
@@ -275,7 +296,7 @@ export const analyticsRouter = router({
           .from(analytics)
           .where(
             and(
-              eq(analytics.userId, user.id),
+              eq(analytics.userId, numericUserId),
               eq(analytics.conversationId, conversationId)
             )
           )
@@ -301,7 +322,7 @@ export const analyticsRouter = router({
    * Track INTERVENTION_OUTCOME event
    * Triggered when a problem intervention is resolved
    */
-  trackInterventionOutcome: protectedProcedure
+  trackInterventionOutcome: mattiProcedure
     .input(
       z.object({
         conversationId: z.number(),

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { protectedProcedure, router } from "./_core/trpc";
+import { mattiProcedure } from "./_core/mattiProcedure";
 import { getDb } from "./db";
 import { messageFeedback } from "../drizzle/schema";
 import { eq, desc } from "drizzle-orm";
@@ -13,7 +14,7 @@ export const feedbackRouter = router({
   /**
    * Submit feedback for an AI message
    */
-  submitFeedback: protectedProcedure
+  submitFeedback: mattiProcedure
     .input(
       z.object({
         conversationId: z.number(),
@@ -31,7 +32,7 @@ export const feedbackRouter = router({
       
       await db.insert(messageFeedback).values({
         conversationId,
-        userId: ctx.user.openId,
+        userId: ctx.user.id,
         messageIndex,
         rating,
         feedbackText: feedbackText || null,
