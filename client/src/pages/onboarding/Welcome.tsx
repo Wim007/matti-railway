@@ -17,15 +17,32 @@ export default function Welcome() {
           {/* Header */}
           <div className="flex flex-col items-center gap-2">
             <div className="text-4xl">👋</div>
-            <h1 className="text-3xl font-bold text-blue-600 text-center">
+            <h1
+              className="text-3xl font-bold text-center"
+              style={{ color: "#2563eb" }}
+            >
               Welkom bij Matti!
             </h1>
           </div>
 
           {/* Visual */}
           <div className="flex justify-center">
-            <div className="w-44 h-44 rounded-full shadow-lg border border-border overflow-hidden" aria-label="Welkom illustratie">
-              <img src={mattiAvatar} alt="Matti" className="w-full h-full object-cover" />
+            <div
+              style={{
+                width: "176px",
+                height: "176px",
+                borderRadius: "50%",
+                overflow: "hidden",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                border: "1px solid #e2e8f0",
+              }}
+              aria-label="Welkom illustratie"
+            >
+              <img
+                src={mattiAvatar}
+                alt="Matti"
+                style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+              />
             </div>
           </div>
 
