@@ -84,6 +84,7 @@ export const chatRouter = router({
       const { themeId } = input;
 
       // Find existing ACTIVE (non-archived) conversation
+      // COALESCE handles databases where isArchived column may not exist yet
       const existing = await db
         .select()
         .from(conversations)
@@ -91,9 +92,10 @@ export const chatRouter = router({
           and(
             eq(conversations.userId, userId),
             eq(conversations.themeId, themeId as ThemeId),
-            eq(conversations.isArchived, false)
+            sql`COALESCE(${conversations.isArchived}, false) = false`
           )
         )
+        .orderBy(desc(conversations.updatedAt))
         .limit(1);
 
       if (existing.length > 0) {
@@ -214,8 +216,6 @@ export const chatRouter = router({
           messages: conversations.messages,
           updatedAt: conversations.updatedAt,
           createdAt: conversations.createdAt,
-          isArchived: conversations.isArchived,
-          archivedAt: conversations.archivedAt,
         })
         .from(conversations)
         .where(eq(conversations.userId, userId))
@@ -230,8 +230,8 @@ export const chatRouter = router({
           messages: msgs,
           updatedAt: convo.updatedAt,
           createdAt: convo.createdAt,
-          isArchived: convo.isArchived,
-          archivedAt: convo.archivedAt,
+          isArchived: false, // Default false; column added via migration
+          archivedAt: null,
           messageCount: msgs.length,
           userMessageCount: userMessages.length,
           // Eerste gebruikersbericht als preview-titel
@@ -428,9 +428,10 @@ export const chatRouter = router({
           and(
             eq(conversations.userId, userId),
             eq(conversations.themeId, themeId as ThemeId),
-            eq(conversations.isArchived, false)
+            sql`COALESCE(${conversations.isArchived}, false) = false`
           )
         )
+        .orderBy(desc(conversations.updatedAt))
         .limit(1);
 
       if (existing.length > 0) {
@@ -504,12 +505,12 @@ export const chatRouter = router({
           and(
             eq(conversations.userId, userId),
             eq(conversations.themeId, themeId as ThemeId),
-            eq(conversations.isArchived, false)
+            sql`COALESCE(${conversations.isArchived}, false) = false`
           )
         )
+        .orderBy(desc(conversations.updatedAt))
         .limit(1);
-
-      if (existing.length === 0) return { success: true }; // Niets te archiveren
+      if (existing.length === 0) return { success: true }; // Niets te archiverenn
 
       const convo = existing[0];
       const messages = (convo.messages as Array<{ role: string; content: string }>) || [];
