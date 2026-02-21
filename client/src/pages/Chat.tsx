@@ -106,7 +106,7 @@ export default function Chat() {
   const updateSummary = trpc.chat.updateSummary.useMutation();
   const saveAction = trpc.action.saveAction.useMutation();
   const deleteConversation = trpc.chat.deleteConversation.useMutation();
-  const archiveConversation = trpc.chat.archiveConversation.useMutation();
+  const closeAndStartNew = trpc.chat.closeAndStartNew.useMutation();
   
   // Analytics tracking
   const trackSessionStart = trpc.analytics.trackSessionStart.useMutation();
@@ -144,13 +144,11 @@ export default function Chat() {
       const elapsed = now - parseInt(stored, 10);
       if (elapsed >= INACTIVITY_MS) {
         // Genereer samenvatting van het vorige gesprek en archiveer het
-        const doArchive = async () => {
+        const doClose = async () => {
           try {
-            // Haal huidige berichten op uit localStorage of wacht op conversation
-            // We archiveren via de server — de samenvatting wordt server-side gegenereerd
-            await archiveConversation.mutateAsync({ themeId: currentThemeId });
+            await closeAndStartNew.mutateAsync({ themeId: currentThemeId });
           } catch (e) {
-            console.warn('[Inactivity] Archive failed, proceeding anyway', e);
+            console.warn('[Inactivity] closeAndStartNew failed, proceeding anyway', e);
           } finally {
             setMessages([]);
             setInitializedConversationId(null);
@@ -158,7 +156,7 @@ export default function Chat() {
             refetchConversation();
           }
         };
-        doArchive();
+        doClose();
       }
     }
     updateLastActivity();

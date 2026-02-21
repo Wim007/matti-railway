@@ -204,9 +204,8 @@ export const chatRouter = router({
       if (!db) {
         throw new Error("Database not available");
       }
-
       const userId = ctx.user.id;
-
+      // Haal de laatste 10 gesprekken op, inclusief volledige berichten voor teruglezen
       const convos = await db
         .select({
           id: conversations.id,
@@ -220,23 +219,25 @@ export const chatRouter = router({
         })
         .from(conversations)
         .where(eq(conversations.userId, userId))
-        .orderBy(desc(conversations.updatedAt));
-
-      // Count messages for each conversation
+        .orderBy(desc(conversations.updatedAt))
+        .limit(10);
       const withCounts = convos.map((convo) => {
-        const messageCount = (convo.messages as Array<any>)?.length || 0;
+        const msgs = (convo.messages as Array<{ role: string; content: string; timestamp: string }>) || [];
+        const userMessages = msgs.filter((m) => m.role === "user");
         return {
           id: convo.id,
           themeId: convo.themeId,
-          summary: convo.summary,
+          messages: msgs,
           updatedAt: convo.updatedAt,
           createdAt: convo.createdAt,
           isArchived: convo.isArchived,
           archivedAt: convo.archivedAt,
-          messageCount,
+          messageCount: msgs.length,
+          userMessageCount: userMessages.length,
+          // Eerste gebruikersbericht als preview-titel
+          previewText: userMessages[0]?.content?.slice(0, 80) ?? null,
         };
       });
-
       return withCounts;
     }),
 
@@ -401,6 +402,82 @@ export const chatRouter = router({
           updatedAt: new Date(),
         })
         .where(eq(conversations.id, conversationId));
+
+      return { success: true };
+    }),
+
+  /**
+   * Sluit het actieve gesprek af en maak een nieuw aan (bij 30 min inactiviteit)
+   * Genereert automatisch een samenvatting voor caching.
+   */
+  closeAndStartNew: mattiProcedure
+    .input(z.object({
+      themeId: themeIdEnum,
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      const userId = ctx.user.id;
+      const { themeId } = input;
+
+      // Haal het actieve gesprek op
+      const existing = await db
+        .select()
+        .from(conversations)
+        .where(
+          and(
+            eq(conversations.userId, userId),
+            eq(conversations.themeId, themeId as ThemeId),
+            eq(conversations.isArchived, false)
+          )
+        )
+        .limit(1);
+
+      if (existing.length > 0) {
+        const convo = existing[0];
+        const msgs = (convo.messages as Array<{ role: string; content: string }>) || [];
+        const userMessages = msgs.filter((m) => m.role === "user");
+
+        if (userMessages.length > 0) {
+          // Genereer samenvatting voor caching als die er nog niet is
+          let finalSummary = convo.summary;
+          if (!finalSummary) {
+            finalSummary = await generateConversationSummary(msgs) ?? undefined;
+          }
+          await db
+            .update(conversations)
+            .set({
+              isArchived: true,
+              archivedAt: new Date(),
+              ...(finalSummary ? { summary: finalSummary } : {}),
+              updatedAt: new Date(),
+            })
+            .where(eq(conversations.id, convo.id));
+
+          // Verwijder oudste gesprekken als er meer dan 10 zijn
+          const allConvos = await db
+            .select({ id: conversations.id })
+            .from(conversations)
+            .where(eq(conversations.userId, userId))
+            .orderBy(desc(conversations.updatedAt));
+          if (allConvos.length > 10) {
+            const toDelete = allConvos.slice(10).map((c) => c.id);
+            for (const id of toDelete) {
+              await db.delete(conversations).where(eq(conversations.id, id));
+            }
+          }
+        } else {
+          // Leeg gesprek: gewoon verwijderen, niet archiveren
+          await db.delete(conversations).where(eq(conversations.id, convo.id));
+        }
+      }
+
+      // Maak nieuw gesprek aan
+      await db.insert(conversations).values({
+        userId,
+        themeId: themeId as ThemeId,
+        messages: [],
+      });
 
       return { success: true };
     }),
