@@ -106,6 +106,7 @@ export default function Chat() {
   const updateSummary = trpc.chat.updateSummary.useMutation();
   const saveAction = trpc.action.saveAction.useMutation();
   const deleteConversation = trpc.chat.deleteConversation.useMutation();
+  const archiveConversation = trpc.chat.archiveConversation.useMutation();
   
   // Analytics tracking
   const trackSessionStart = trpc.analytics.trackSessionStart.useMutation();
@@ -142,18 +143,22 @@ export default function Chat() {
     if (stored) {
       const elapsed = now - parseInt(stored, 10);
       if (elapsed >= INACTIVITY_MS) {
-        // Reset: verwijder gesprek zodat getConversation een nieuw aanmaakt
-        deleteConversation.mutate(
-          { themeId: currentThemeId },
-          {
-            onSuccess: () => {
-              setMessages([]);
-              setInitializedConversationId(null);
-              setSessionStartTracked(false);
-              refetchConversation();
-            },
+        // Genereer samenvatting van het vorige gesprek en archiveer het
+        const doArchive = async () => {
+          try {
+            // Haal huidige berichten op uit localStorage of wacht op conversation
+            // We archiveren via de server — de samenvatting wordt server-side gegenereerd
+            await archiveConversation.mutateAsync({ themeId: currentThemeId });
+          } catch (e) {
+            console.warn('[Inactivity] Archive failed, proceeding anyway', e);
+          } finally {
+            setMessages([]);
+            setInitializedConversationId(null);
+            setSessionStartTracked(false);
+            refetchConversation();
           }
-        );
+        };
+        doArchive();
       }
     }
     updateLastActivity();

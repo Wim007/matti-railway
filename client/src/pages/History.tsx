@@ -109,12 +109,15 @@ export default function History() {
                     if (!theme) return null;
 
                     const [gradientFrom, gradientTo] = theme.colors.gradient;
+                    const isArchived = (convo as any).isArchived;
 
                     return (
                       <button
                         key={convo.id}
-                        onClick={() => handleResumeConversation(convo.themeId)}
-                        className="w-full bg-card rounded-xl p-4 shadow-sm hover:shadow-md hover:bg-muted transition-all border border-border text-left group"
+                        onClick={() => !isArchived && handleResumeConversation(convo.themeId)}
+                        className={`w-full bg-card rounded-xl p-4 shadow-sm transition-all border border-border text-left group ${
+                          isArchived ? "opacity-70 cursor-default" : "hover:shadow-md hover:bg-muted"
+                        }`}
                       >
                         <div className="flex items-start gap-3">
                           {/* Theme Icon */}
@@ -130,9 +133,23 @@ export default function History() {
                           {/* Content */}
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between mb-1">
-                              <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
-                                {theme.name}
-                              </h3>
+                              <div className="flex items-center gap-2">
+                                <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                                  {theme.name}
+                                </h3>
+                                {isArchived && (
+                                  <span style={{
+                                    fontSize: "10px",
+                                    padding: "1px 7px",
+                                    borderRadius: "9999px",
+                                    background: "#e0e7ef",
+                                    color: "#4b6080",
+                                    fontWeight: 600,
+                                  }}>
+                                    Afgesloten
+                                  </span>
+                                )}
+                              </div>
                               <div className="flex items-center gap-1 text-xs text-muted-foreground">
                                 <Clock className="w-3 h-3" />
                                 <span>
@@ -151,7 +168,7 @@ export default function History() {
                               </p>
                             ) : (
                               <p className="text-sm text-muted-foreground italic mb-2">
-                                Nog geen samenvatting
+                                {isArchived ? "Geen samenvatting beschikbaar" : "Nog geen samenvatting"}
                               </p>
                             )}
 

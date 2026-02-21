@@ -5,6 +5,47 @@ import { getDb } from "./db";
 import { conversations } from "../drizzle/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 import type { ThemeId } from "@shared/matti-types";
+import { ENV } from "./_core/env";
+
+/**
+ * Genereer een beknopte samenvatting van een gesprek via OpenAI
+ */
+async function generateConversationSummary(
+  messages: Array<{ role: string; content: string }>
+): Promise<string | null> {
+  if (!ENV.openaiApiKey || messages.length === 0) return null;
+  try {
+    const transcript = messages
+      .map((m) => `${m.role === "user" ? "Gebruiker" : "Matti"}: ${m.content}`)
+      .join("\n");
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${ENV.openaiApiKey}`,
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content:
+              "Vat dit gesprek samen in 2-3 zinnen in het Nederlands. Beschrijf het onderwerp en de kern van het gesprek. Wees beknopt.",
+          },
+          { role: "user", content: transcript },
+        ],
+        max_tokens: 200,
+        temperature: 0.5,
+      }),
+    });
+    if (!response.ok) return null;
+    const data = await response.json() as any;
+    return data.choices?.[0]?.message?.content?.trim() ?? null;
+  } catch (e) {
+    console.warn("[Archive] Summary generation failed:", e);
+    return null;
+  }
+}
 
 /**
  * Chat Router
@@ -42,14 +83,15 @@ export const chatRouter = router({
       const userId = ctx.user.id;
       const { themeId } = input;
 
-      // Find existing conversation
+      // Find existing ACTIVE (non-archived) conversation
       const existing = await db
         .select()
         .from(conversations)
         .where(
           and(
             eq(conversations.userId, userId),
-            eq(conversations.themeId, themeId as ThemeId)
+            eq(conversations.themeId, themeId as ThemeId),
+            eq(conversations.isArchived, false)
           )
         )
         .limit(1);
@@ -173,6 +215,8 @@ export const chatRouter = router({
           messages: conversations.messages,
           updatedAt: conversations.updatedAt,
           createdAt: conversations.createdAt,
+          isArchived: conversations.isArchived,
+          archivedAt: conversations.archivedAt,
         })
         .from(conversations)
         .where(eq(conversations.userId, userId))
@@ -187,6 +231,8 @@ export const chatRouter = router({
           summary: convo.summary,
           updatedAt: convo.updatedAt,
           createdAt: convo.createdAt,
+          isArchived: convo.isArchived,
+          archivedAt: convo.archivedAt,
           messageCount,
         };
       });
@@ -355,6 +401,61 @@ export const chatRouter = router({
           updatedAt: new Date(),
         })
         .where(eq(conversations.id, conversationId));
+
+      return { success: true };
+    }),
+
+  /**
+   * Archive conversation with summary (bij inactiviteits-reset)
+   */
+  archiveConversation: mattiProcedure
+    .input(z.object({
+      themeId: themeIdEnum,
+      summary: z.string().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      const userId = ctx.user.id;
+      const { themeId, summary } = input;
+
+      // Haal het actieve gesprek op
+      const existing = await db
+        .select()
+        .from(conversations)
+        .where(
+          and(
+            eq(conversations.userId, userId),
+            eq(conversations.themeId, themeId as ThemeId),
+            eq(conversations.isArchived, false)
+          )
+        )
+        .limit(1);
+
+      if (existing.length === 0) return { success: true }; // Niets te archiveren
+
+      const convo = existing[0];
+      const messages = (convo.messages as Array<{ role: string; content: string }>) || [];
+
+      // Sla alleen op als er echte berichten zijn (niet alleen de welkomstboodschap)
+      const userMessages = messages.filter((m) => m.role === "user");
+      if (userMessages.length === 0) return { success: true };
+
+      // Genereer samenvatting als die er nog niet is
+      let finalSummary = summary || convo.summary;
+      if (!finalSummary) {
+        finalSummary = await generateConversationSummary(messages) ?? undefined;
+      }
+
+      await db
+        .update(conversations)
+        .set({
+          isArchived: true,
+          archivedAt: new Date(),
+          ...(finalSummary ? { summary: finalSummary } : {}),
+          updatedAt: new Date(),
+        })
+        .where(eq(conversations.id, convo.id));
 
       return { success: true };
     }),

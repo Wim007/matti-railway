@@ -85,6 +85,8 @@ export const conversations = pgTable("conversations", {
   outcome: outcomeEnum("outcome").default("in_progress"), // Current status
   resolution: text("resolution"), // e.g., "Kan nu beter voor zichzelf opkomen"
   actionCompletionRate: integer("actionCompletionRate").default(0).notNull(), // Percentage of actions completed (0-100)
+  isArchived: boolean("isArchived").default(false).notNull(),
+  archivedAt: timestamp("archivedAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
