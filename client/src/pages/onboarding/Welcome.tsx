@@ -17,14 +17,14 @@ export default function Welcome() {
           {/* Header */}
           <div className="flex flex-col items-center gap-2">
             <div className="text-4xl">👋</div>
-            <h1 className="text-3xl font-bold text-foreground text-center">
+            <h1 className="text-3xl font-bold text-blue-600 text-center">
               Welkom bij Matti!
             </h1>
           </div>
 
           {/* Visual */}
           <div className="flex justify-center">
-            <div className="w-64 h-64 rounded-full shadow-lg border border-border overflow-hidden" aria-label="Welkom illustratie">
+            <div className="w-44 h-44 rounded-full shadow-lg border border-border overflow-hidden" aria-label="Welkom illustratie">
               <img src={mattiAvatar} alt="Matti" className="w-full h-full object-cover" />
             </div>
           </div>
