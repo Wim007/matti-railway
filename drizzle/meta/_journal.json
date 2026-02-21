@@ -64,6 +64,13 @@
       "when": 1771347444935,
       "tag": "0008_right_forgotten_one",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "5",
+      "when": 1771400000000,
+      "tag": "0009_add_archive_columns",
+      "breakpoints": true
     }
   ]
 }
