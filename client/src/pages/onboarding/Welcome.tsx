@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useLocation } from "wouter";
 import mattiAvatar from "@/assets/matti-avatar.png";
 import {
@@ -9,6 +10,20 @@ import {
 
 export default function Welcome() {
   const [, setLocation] = useLocation();
+
+  useEffect(() => {
+    const profile = localStorage.getItem("matti_user_profile");
+    if (profile) {
+      try {
+        const parsed = JSON.parse(profile);
+        if (parsed?.name) {
+          setLocation("/chat");
+        }
+      } catch (e) {
+        // corrupt data, toon welkomstpagina
+      }
+    }
+  }, [setLocation]);
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-b from-background to-muted/40">
