@@ -1,4 +1,5 @@
 import { useLocation } from "wouter";
+import mattiAvatar from "@/assets/matti-avatar.png";
 import {
   Accordion,
   AccordionContent,
@@ -23,8 +24,8 @@ export default function Welcome() {
 
           {/* Visual */}
           <div className="flex justify-center">
-            <div className="w-64 h-64 rounded-full shadow-lg border border-border bg-card flex items-center justify-center text-7xl" aria-label="Welkom illustratie">
-              🙂
+            <div className="w-64 h-64 rounded-full shadow-lg border border-border overflow-hidden" aria-label="Welkom illustratie">
+              <img src={mattiAvatar} alt="Matti" className="w-full h-full object-cover" />
             </div>
           </div>
 
