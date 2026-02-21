@@ -123,7 +123,42 @@ export default function Chat() {
   // Track session start when conversation is loaded
   const [sessionStartTracked, setSessionStartTracked] = useState(false);
   const [sessionStartTime, setSessionStartTime] = useState(Date.now());
-  const [feedbackState, setFeedbackState] = useState<Record<string, { rating: 'up' | 'down' | null; showInput: boolean; text: string }>>({});
+  const [feedbackState, setFeedbackState] = useState<Record<string, { rating: 'up' | 'down' | null; showInput: boolean; text: string }>>({})
+
+  // --- 30-minuten inactiviteits-reset ---
+  const INACTIVITY_MS = 30 * 60 * 1000;
+  const lastActivityRef = useRef<number>(Date.now());
+
+  const updateLastActivity = () => {
+    const now = Date.now();
+    lastActivityRef.current = now;
+    localStorage.setItem("matti_last_activity", now.toString());
+  };
+
+  // Check bij mount of gebruiker langer dan 30 min weg was
+  useEffect(() => {
+    const stored = localStorage.getItem("matti_last_activity");
+    const now = Date.now();
+    if (stored) {
+      const elapsed = now - parseInt(stored, 10);
+      if (elapsed >= INACTIVITY_MS) {
+        // Reset: verwijder gesprek zodat getConversation een nieuw aanmaakt
+        deleteConversation.mutate(
+          { themeId: currentThemeId },
+          {
+            onSuccess: () => {
+              setMessages([]);
+              setInitializedConversationId(null);
+              setSessionStartTracked(false);
+              refetchConversation();
+            },
+          }
+        );
+      }
+    }
+    updateLastActivity();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   
   useEffect(() => {
     if (conversation && !sessionStartTracked && userProfile) {
@@ -204,6 +239,7 @@ export default function Chat() {
 
   const handleSendMessage = async () => {
     if (!inputText.trim() || !userProfile) return;
+    updateLastActivity();
 
     const userMsg: ChatMessage = {
       id: Date.now().toString(),
