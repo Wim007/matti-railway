@@ -1,12 +1,13 @@
 import { useEffect } from "react";
 import { useLocation } from "wouter";
 import mattiAvatar from "@/assets/matti-avatar.png";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+
+const EXAMPLE_OPTIONS = [
+  "Ik voel me niet goed",
+  "Ik maak me zorgen",
+  "Ik heb ruzie gehad",
+  "Gewoon even praten",
+];
 
 export default function Welcome() {
   const [, setLocation] = useLocation();
@@ -25,88 +26,113 @@ export default function Welcome() {
     }
   }, [setLocation]);
 
+  const handleStart = (prefilledMessage?: string) => {
+    if (prefilledMessage) {
+      sessionStorage.setItem("matti_prefilled_message", prefilledMessage);
+    }
+    setLocation("/onboarding/account");
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-b from-background to-muted/40">
-      <div className="max-w-2xl w-full">
-        <div className="flex flex-col gap-4">
-          {/* Header */}
-          <div className="flex flex-col items-center gap-2">
-            <div className="text-4xl">👋</div>
-            <h1
-              className="text-3xl font-bold text-center"
-              style={{ color: "#2563eb" }}
-            >
-              Welkom bij Matti!
-            </h1>
-          </div>
+    <div
+      style={{
+        minHeight: "100dvh",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "24px 20px",
+        background: "linear-gradient(160deg, #f0f4ff 0%, #faf5ff 100%)",
+      }}
+    >
+      <div style={{ width: "100%", maxWidth: "400px", display: "flex", flexDirection: "column", alignItems: "center", gap: "24px" }}>
 
-          {/* Visual */}
-          <div className="flex justify-center">
-            <div
-              style={{ width: "176px", height: "176px" }}
-              aria-label="Welkom illustratie"
-            >
-              <img
-                src={mattiAvatar}
-                alt="Matti"
-                style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
-              />
-            </div>
-          </div>
+        {/* Avatar */}
+        <img
+          src={mattiAvatar}
+          alt="Matti"
+          style={{ width: "120px", height: "120px", objectFit: "contain" }}
+        />
 
-          {/* Main Content - Accordion */}
-          <div className="w-full rounded-2xl p-4 shadow-xl border border-border bg-card">
-            <Accordion type="multiple" className="w-full space-y-2">
-              <AccordionItem value="item-1" className="border-none">
-                <AccordionTrigger className="text-lg font-bold hover:no-underline py-2">
-                  <span className="flex items-center gap-2 text-primary">
-                    <span>💬</span> Wat doet Matti?
-                  </span>
-                </AccordionTrigger>
-                <AccordionContent className="text-sm leading-relaxed text-muted-foreground pt-1">
-                  Matti is een AI chatbuddy voor jongeren (12-21 jaar). Je kunt met Matti praten over alles wat je bezighoudt, zonder oordeel. Matti luistert, geeft tips en helpt je stappen te zetten.
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="item-2" className="border-none">
-                <AccordionTrigger className="text-lg font-bold hover:no-underline py-2">
-                  <span className="flex items-center gap-2 text-primary">
-                    <span>🗨️</span> Waarover kun je praten?
-                  </span>
-                </AccordionTrigger>
-                <AccordionContent className="text-sm leading-relaxed text-muted-foreground pt-1">
-                  <div className="space-y-0.5">
-                    <p><span className="font-semibold text-foreground">🏫 School:</span> Faalangst, tentamens, concentratie</p>
-                    <p><span className="font-semibold text-foreground">👫 Vrienden:</span> Ruzie, pesten, vriendschap</p>
-                    <p><span className="font-semibold text-foreground">🏠 Thuis:</span> Ouders, gezin, scheiding</p>
-                    <p><span className="font-semibold text-foreground">💖 Gevoelens:</span> Angst, stress, somberheid</p>
-                    <p><span className="font-semibold text-foreground">❤️ Liefde:</span> Relaties, heartbreak</p>
-                    <p className="text-xs text-muted-foreground mt-1">🔒 Alles blijft privé. Matti geeft praktische tips en checkt later hoe het gaat.</p>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          </div>
-
-          {/* Buttons */}
-          <div className="flex flex-col gap-3">
-            {/* Primary Button */}
-            <button
-              onClick={() => setLocation("/onboarding/account")}
-              className="bg-primary text-primary-foreground text-xl font-bold py-4 px-8 rounded-2xl hover:opacity-90 transition-opacity"
-            >
-              Lets Talk
-            </button>
-
-            {/* Secondary Button */}
-            <button
-              onClick={() => setLocation("/parent-info")}
-              className="bg-card text-foreground text-base font-semibold py-4 px-8 rounded-2xl border-2 border-border hover:bg-muted transition-colors"
-            >
-              Meer info voor ouders
-            </button>
-          </div>
+        {/* Titel + subtekst */}
+        <div style={{ textAlign: "center" }}>
+          <h1 style={{ fontSize: "1.75rem", fontWeight: 700, color: "#2563eb", margin: 0 }}>
+            Hoi, ik ben Matti.
+          </h1>
+          <p style={{ fontSize: "1rem", color: "#64748b", marginTop: "8px" }}>
+            Je kunt hier praten over wat er in je hoofd zit.
+          </p>
         </div>
+
+        {/* Voorbeeldopties */}
+        <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "10px" }}>
+          {EXAMPLE_OPTIONS.map((option) => (
+            <button
+              key={option}
+              onClick={() => handleStart(option)}
+              style={{
+                width: "100%",
+                padding: "14px 18px",
+                borderRadius: "14px",
+                border: "1.5px solid #bfdbfe",
+                background: "#ffffff",
+                color: "#1e40af",
+                fontSize: "0.95rem",
+                fontWeight: 600,
+                textAlign: "left",
+                cursor: "pointer",
+                transition: "background 0.15s, border-color 0.15s",
+                boxShadow: "0 1px 4px rgba(37,99,235,0.07)",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.background = "#eff6ff";
+                (e.currentTarget as HTMLButtonElement).style.borderColor = "#93c5fd";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.background = "#ffffff";
+                (e.currentTarget as HTMLButtonElement).style.borderColor = "#bfdbfe";
+              }}
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+
+        {/* Primaire knop */}
+        <button
+          onClick={() => handleStart()}
+          style={{
+            width: "100%",
+            padding: "16px",
+            borderRadius: "16px",
+            border: "none",
+            background: "linear-gradient(90deg, #2563eb, #7c3aed)",
+            color: "#ffffff",
+            fontSize: "1.1rem",
+            fontWeight: 700,
+            cursor: "pointer",
+            boxShadow: "0 4px 14px rgba(37,99,235,0.3)",
+          }}
+        >
+          Laten we praten
+        </button>
+
+        {/* Over Matti link */}
+        <button
+          onClick={() => setLocation("/parent-info")}
+          style={{
+            background: "none",
+            border: "none",
+            color: "#94a3b8",
+            fontSize: "0.85rem",
+            cursor: "pointer",
+            textDecoration: "underline",
+            padding: "4px",
+          }}
+        >
+          Over Matti
+        </button>
+
       </div>
     </div>
   );
