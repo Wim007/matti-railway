@@ -64,13 +64,19 @@ async function sendEventToDashboard(eventType: string, eventData: any) {
 
     const dashboardEvent = convertToDashboardFormat(eventType, eventData);
 
+    // Add type field required by new Dashboard API
+    const payload = {
+      type: eventType,
+      ...dashboardEvent,
+    };
+
     const response = await fetch(ANALYTICS_CONFIG.endpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "X-API-Key": ANALYTICS_CONFIG.apiKey,
       },
-      body: JSON.stringify(dashboardEvent),
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
