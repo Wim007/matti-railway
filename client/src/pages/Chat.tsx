@@ -114,6 +114,15 @@ export default function Chat() {
     }
   }, [messages, isTyping]);
 
+  // Prefilled bericht vanuit welkomstpagina (na account-aanmaak of direct inloggen)
+  useEffect(() => {
+    const prefilled = sessionStorage.getItem("matti_prefilled_message");
+    if (prefilled && conversation && messages.length <= 1) {
+      sessionStorage.removeItem("matti_prefilled_message");
+      setInputText(prefilled);
+    }
+  }, [conversation, messages.length]);
+
   // Mutations
   const sendToAssistant = trpc.assistant.send.useMutation();
   const saveMessage = trpc.chat.saveMessage.useMutation();

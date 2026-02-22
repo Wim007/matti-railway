@@ -30,6 +30,20 @@ export default function Welcome() {
     if (prefilledMessage) {
       sessionStorage.setItem("matti_prefilled_message", prefilledMessage);
     }
+    // Als gebruiker al een profiel heeft: direct naar chat
+    const profile = localStorage.getItem("matti_user_profile");
+    if (profile) {
+      try {
+        const parsed = JSON.parse(profile);
+        if (parsed?.name) {
+          setLocation("/chat");
+          return;
+        }
+      } catch (e) {
+        // corrupt, ga naar account
+      }
+    }
+    // Niet ingelogd: naar account-aanmaak
     setLocation("/onboarding/account");
   };
 
