@@ -2,18 +2,22 @@
  * Generate welcome message with fixed templates (no AI generation)
  */
 export function generateWelcomeMessage(name: string): string {
-  // Fixed greeting templates
+  // Vriendelijke, passende begroetingen
   const greetings = [
-    `Hey ${name}!`,
     `Hoi ${name}!`,
-    `Yo ${name}!`,
+    `Hey ${name}!`,
+    `Fijn dat je er bent, ${name}!`,
+    `Hallo ${name}!`,
+    `Goed je te zien, ${name}!`,
   ];
 
-  // Fixed question templates
+  // Uitnodigende openingsvragen
   const questions = [
     "Waar wil je het over hebben?",
+    "Hoe gaat het met je?",
+    "Wat speelt er bij jou?",
     "Wat kan ik voor je doen?",
-    "Hoe kan ik je helpen?",
+    "Vertel, wat houdt je bezig?",
   ];
 
   // Random selection
