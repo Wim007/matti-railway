@@ -300,15 +300,30 @@ export default function Chat() {
       }
 
       let context = "";
-      
-      if (conversation?.summary) {
-        context = `[EERDERE SAMENVATTING]\n${conversation.summary}\n\n[RECENTE BERICHTEN]\n`;
+
+      // Bepaal of dit een nieuwe sessie is (eerste echte gebruikersbericht)
+      const isFirstMessage = messages.filter((m) => !m.isAI).length === 0;
+
+      if (isFirstMessage && conversation?.summary) {
+        // Nieuwe sessie: stuur ALLEEN de samenvatting als context (kostenbeheersing)
+        context = `[SESSIESAMENVATTING VORIG GESPREK]\n${conversation.summary}`;
+        console.log('[Context] New session: using summary only (no full history)');
+      } else if (conversation?.summary) {
+        // Lopend gesprek: samenvatting + laatste 5 berichten
+        const recentMessages = messages.slice(-5);
+        context = `[SESSIESAMENVATTING]\n${conversation.summary}\n\n[RECENTE BERICHTEN]\n`;
+        context += recentMessages
+          .map((m) => `${m.isAI ? "Matti" : "Gebruiker"}: ${m.content}`)
+          .join("\n");
+        console.log('[Context] Ongoing session: summary + last 5 messages');
+      } else {
+        // Geen samenvatting: stuur laatste 5 berichten
+        const recentMessages = messages.slice(-5);
+        context += recentMessages
+          .map((m) => `${m.isAI ? "Matti" : "Gebruiker"}: ${m.content}`)
+          .join("\n");
+        console.log('[Context] No summary: last 5 messages only');
       }
-      
-      const recentMessages = messages.slice(-8);
-      context += recentMessages
-        .map((m) => `${m.isAI ? "Matti" : "Gebruiker"}: ${m.content}`)
-        .join("\n");
 
       let followUpContext: string | undefined = undefined;
       if (messages.length === 1 && recentContextData?.contextPrompt) {
