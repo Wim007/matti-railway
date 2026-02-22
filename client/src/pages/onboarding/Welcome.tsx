@@ -43,20 +43,13 @@ export default function Welcome() {
           {/* Visual */}
           <div className="flex justify-center">
             <div
-              style={{
-                width: "176px",
-                height: "176px",
-                borderRadius: "50%",
-                overflow: "hidden",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                border: "1px solid #e2e8f0",
-              }}
+              style={{ width: "176px", height: "176px" }}
               aria-label="Welkom illustratie"
             >
               <img
                 src={mattiAvatar}
                 alt="Matti"
-                style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
               />
             </div>
           </div>
