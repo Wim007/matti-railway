@@ -122,9 +122,33 @@ export const chatRouter = router({
         .orderBy(conversations.createdAt)
         .limit(1);
 
-      return newConversation[0];
+       return newConversation[0];
     }),
-
+  /**
+   * Get a specific conversation by ID (for history "Verder praten")
+   */
+  getConversationById: mattiProcedure
+    .input(z.object({
+      conversationId: z.number(),
+    }))
+    .query(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      const userId = ctx.user.id;
+      const { conversationId } = input;
+      const existing = await db
+        .select()
+        .from(conversations)
+        .where(
+          and(
+            eq(conversations.userId, userId),
+            eq(conversations.id, conversationId)
+          )
+        )
+        .limit(1);
+      if (existing.length === 0) throw new Error("Conversation not found");
+      return existing[0];
+    }),
   /**
    * Save message to conversation
    */

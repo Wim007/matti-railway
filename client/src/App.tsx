@@ -32,6 +32,9 @@ function Router() {
       <Route path="/chat">
         <ProtectedRoute><Chat /></ProtectedRoute>
       </Route>
+      <Route path="/chat/:conversationId">
+        <ProtectedRoute><Chat /></ProtectedRoute>
+      </Route>
       <Route path="/history">
         <ProtectedRoute><History /></ProtectedRoute>
       </Route>

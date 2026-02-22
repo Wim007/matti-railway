@@ -15,9 +15,9 @@ export default function History() {
 
   const { data: conversations, isLoading } = trpc.chat.getAllConversations.useQuery();
 
-  const handleContinueConversation = (themeId: ThemeId) => {
+  const handleContinueConversation = (conversationId: number, themeId: ThemeId) => {
     setCurrentThemeId(themeId);
-    setLocation("/chat");
+    setLocation(`/chat/${conversationId}`);
   };
 
   const toggleExpand = (id: number) => {
@@ -163,15 +163,13 @@ export default function History() {
 
                           {/* Acties */}
                           <div className="flex gap-2 mt-3">
-                            {!isArchived && (
-                              <button
-                                onClick={() => handleContinueConversation(convo.themeId as ThemeId)}
-                                className="flex items-center gap-1 px-3 py-1.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 transition-all"
-                              >
-                                <ArrowRight className="w-3.5 h-3.5" />
-                                Verder praten
-                              </button>
-                            )}
+                            <button
+                              onClick={() => handleContinueConversation(convo.id, convo.themeId as ThemeId)}
+                              className="flex items-center gap-1 px-3 py-1.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 transition-all"
+                            >
+                              <ArrowRight className="w-3.5 h-3.5" />
+                              Verder praten
+                            </button>
                             {msgs && msgs.length > 0 && (
                               <button
                                 onClick={() => toggleExpand(convo.id)}

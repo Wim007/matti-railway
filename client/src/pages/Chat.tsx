@@ -5,6 +5,7 @@ import { useMattiTheme } from "@/contexts/MattiThemeContext";
 import { detectActionIntelligent } from "@shared/action-detection";
 import { generateWelcomeMessage } from "@shared/welcome-message";
 import { toast } from "sonner";
+import { useRoute } from "wouter";
 import BottomNavigation from "@/components/BottomNavigation";
 
 // Helper to get user profile from localStorage
@@ -27,11 +28,25 @@ export default function Chat() {
   const [isTyping, setIsTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Fetch conversation for current theme
-  const { data: conversation, refetch: refetchConversation, isLoading: conversationLoading, isError: conversationError } = trpc.chat.getConversation.useQuery(
-    { themeId: currentThemeId },
-    { enabled: !!userProfile, refetchOnMount: true, retry: 1, staleTime: 0 }
+  // Check if we're opening a specific conversation from history (/chat/:conversationId)
+  const [matchById, paramsById] = useRoute("/chat/:conversationId");
+  const urlConversationId = matchById && paramsById?.conversationId ? parseInt(paramsById.conversationId, 10) : null;
+
+  // Fetch specific conversation by ID (from history "Verder praten")
+  const { data: conversationById, isLoading: loadingById } = trpc.chat.getConversationById.useQuery(
+    { conversationId: urlConversationId! },
+    { enabled: !!userProfile && !!urlConversationId, refetchOnMount: true, retry: 1, staleTime: 0 }
   );
+
+  // Fetch conversation for current theme (default, only when NOT opening by ID)
+  const { data: conversationByTheme, refetch: refetchConversation, isLoading: conversationLoading, isError: conversationError } = trpc.chat.getConversation.useQuery(
+    { themeId: currentThemeId },
+    { enabled: !!userProfile && !urlConversationId, refetchOnMount: true, retry: 1, staleTime: 0 }
+  );
+
+  // Use the specific conversation if coming from history, otherwise use theme conversation
+  const conversation = urlConversationId ? conversationById : conversationByTheme;
+  const isConversationLoading = urlConversationId ? loadingById : conversationLoading;
   
   // Fetch recent conversation context for follow-up
   const { data: recentContextData } = trpc.followUpContext.getRecentContext.useQuery(
@@ -418,7 +433,7 @@ export default function Chat() {
   };
 
   // Show loading state
-  if (conversationLoading) {
+  if (isConversationLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -430,7 +445,7 @@ export default function Chat() {
   }
 
   // Show error state
-  if (conversationError) {
+  if (conversationError && !urlConversationId) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
