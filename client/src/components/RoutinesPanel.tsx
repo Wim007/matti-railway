@@ -94,8 +94,8 @@ export default function RoutinesPanel({ isOpen, onClose, routineResponse, onClea
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      {/* Backdrop - geen onClick zodat paneel niet wegspringt */}
+      <div className="absolute inset-0 bg-black/40" />
 
       {/* Panel */}
       <div className="relative w-80 max-w-full h-full bg-background shadow-xl flex flex-col overflow-y-auto">
