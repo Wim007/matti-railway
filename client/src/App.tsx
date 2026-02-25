@@ -24,7 +24,6 @@ function Router() {
   return (
     <Switch>
       {/* Onboarding flow */}
-      <Route path="/" component={Welcome} />
       <Route path="/onboarding/welcome" component={Welcome} />
       <Route path="/onboarding/account" component={Account} />
       
@@ -53,6 +52,9 @@ function Router() {
       <Route path="/feedback-dashboard">
         <ProtectedRoute><FeedbackDashboard /></ProtectedRoute>
       </Route>
+
+      {/* Root welcome route intentionally after specific routes to avoid catch-all behavior */}
+      <Route path="/" component={Welcome} />
       
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />

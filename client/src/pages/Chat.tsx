@@ -151,7 +151,7 @@ export default function Chat() {
   const [sessionStartTime, setSessionStartTime] = useState(Date.now());
   const [feedbackState, setFeedbackState] = useState<Record<string, { rating: 'up' | 'down' | null; showInput: boolean; text: string }>>({})
   const [routinesPanelOpen, setRoutinesPanelOpen] = useState(false);
-  const [routineResponse, setRoutineResponse] = useState<{ type: "bedtime" | "wakeup"; message: string; tip?: string; empathy?: string } | null>(null);
+  const [routineResponse, setRoutineResponse] = useState<{ type: "bedtime" | "wakeup"; message: string; tip?: string | null; empathy?: string } | null>(null);
   const respondToRoutine = trpc.routine.respondToRoutine.useMutation();
 
   // Luister naar service worker berichten (push notification klik)
