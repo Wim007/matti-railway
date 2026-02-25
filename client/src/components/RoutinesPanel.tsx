@@ -16,7 +16,7 @@ export default function RoutinesPanel({ isOpen, onClose, routineResponse, onClea
   const [pushGranted, setPushGranted] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const { data: routine } = trpc.routine.getRoutine.useQuery(undefined, {
+  const { data: routine, refetch: refetchRoutine } = trpc.routine.getRoutine.useQuery(undefined, {
     refetchOnMount: true,
   });
   const { data: vapidData } = trpc.routine.getVapidKey.useQuery();
@@ -81,8 +81,8 @@ export default function RoutinesPanel({ isOpen, onClose, routineResponse, onClea
         if (granted) await subscribeToPush();
       }
       await saveRoutine.mutateAsync({ sleepEnabled, bedtime, wakeTime });
+      await refetchRoutine();
       toast.success("Routine opgeslagen!");
-      onClose();
     } catch (err) {
       toast.error("Opslaan mislukt. Probeer opnieuw.");
     } finally {
