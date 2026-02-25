@@ -1,8 +1,9 @@
 import { z } from "zod";
-import { protectedProcedure, router } from "./_core/trpc";
+import { router } from "./_core/trpc";
+import { mattiProcedure } from "./_core/mattiProcedure";
 import { getDb } from "./db";
 import { routines, pushSubscriptions } from "../drizzle/schema-postgres";
-import { eq, and } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import webpush from "web-push";
 
 const VAPID_PUBLIC = process.env.VAPID_PUBLIC_KEY || "";
@@ -23,12 +24,12 @@ if (VAPID_PUBLIC && VAPID_PRIVATE) {
 
 export const routineRouter = router({
   // Get VAPID public key for frontend subscription
-  getVapidKey: protectedProcedure.query(() => {
+  getVapidKey: mattiProcedure.query(() => {
     return { publicKey: VAPID_PUBLIC };
   }),
 
   // Save push subscription
-  savePushSubscription: protectedProcedure
+  savePushSubscription: mattiProcedure
     .input(z.object({
       subscription: z.object({
         endpoint: z.string(),
@@ -41,7 +42,7 @@ export const routineRouter = router({
     .mutation(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) return { success: false };
-      const userId = ctx.user!.openId;
+      const userId = ctx.user.id;
       // Upsert subscription
       const existing = await db.select().from(pushSubscriptions)
         .where(eq(pushSubscriptions.userId, userId)).limit(1);
@@ -61,17 +62,17 @@ export const routineRouter = router({
     }),
 
   // Get routine settings for current user
-  getRoutine: protectedProcedure.query(async ({ ctx }) => {
+  getRoutine: mattiProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) return null;
-    const userId = ctx.user!.openId;
+    const userId = ctx.user.id;
     const result = await db.select().from(routines)
       .where(eq(routines.userId, userId)).limit(1);
     return result[0] || null;
   }),
 
   // Save/update routine settings
-  saveRoutine: protectedProcedure
+  saveRoutine: mattiProcedure
     .input(z.object({
       sleepEnabled: z.boolean(),
       bedtime: z.string(), // "22:30"
@@ -80,7 +81,7 @@ export const routineRouter = router({
     .mutation(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) return { success: false };
-      const userId = ctx.user!.openId;
+      const userId = ctx.user.id;
       const existing = await db.select().from(routines)
         .where(eq(routines.userId, userId)).limit(1);
       if (existing.length > 0) {
@@ -99,12 +100,12 @@ export const routineRouter = router({
     }),
 
   // Record routine response (ja/nee)
-  respondToRoutine: protectedProcedure
+  respondToRoutine: mattiProcedure
     .input(z.object({
       type: z.enum(["bedtime", "wakeup"]),
       response: z.enum(["yes", "no"]),
     }))
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ ctx: _ctx, input }) => {
       // Just return the appropriate follow-up content
       if (input.response === "yes") {
         const messages = {
