@@ -181,3 +181,32 @@ export type Analytics = typeof analytics.$inferSelect;
 export type InsertAnalytics = typeof analytics.$inferInsert;
 export type MessageFeedback = typeof messageFeedback.$inferSelect;
 export type InsertMessageFeedback = typeof messageFeedback.$inferInsert;
+
+/**
+ * Routines table - stores sleep routine settings per user
+ */
+export const routines = pgTable("routines", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  userId: varchar("userId", { length: 255 }).notNull().unique(),
+  sleepEnabled: boolean("sleepEnabled").default(false).notNull(),
+  bedtime: varchar("bedtime", { length: 5 }).default("22:00").notNull(),
+  wakeTime: varchar("wakeTime", { length: 5 }).default("07:00").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+});
+
+/**
+ * PushSubscriptions table - stores Web Push subscriptions per user
+ */
+export const pushSubscriptions = pgTable("pushSubscriptions", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  userId: varchar("userId", { length: 255 }).notNull().unique(),
+  subscription: text("subscription").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+});
+
+export type Routine = typeof routines.$inferSelect;
+export type InsertRoutine = typeof routines.$inferInsert;
+export type PushSubscriptionRecord = typeof pushSubscriptions.$inferSelect;
+export type InsertPushSubscriptionRecord = typeof pushSubscriptions.$inferInsert;

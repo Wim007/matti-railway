@@ -7,6 +7,7 @@ import { generateWelcomeMessage } from "@shared/welcome-message";
 import { toast } from "sonner";
 import { useRoute } from "wouter";
 import BottomNavigation from "@/components/BottomNavigation";
+import RoutinesPanel from "@/components/RoutinesPanel";
 
 // Helper to get user profile from localStorage
 function getUserProfile(): UserProfile | null {
@@ -149,6 +150,39 @@ export default function Chat() {
   const [sessionStartTracked, setSessionStartTracked] = useState(false);
   const [sessionStartTime, setSessionStartTime] = useState(Date.now());
   const [feedbackState, setFeedbackState] = useState<Record<string, { rating: 'up' | 'down' | null; showInput: boolean; text: string }>>({})
+  const [routinesPanelOpen, setRoutinesPanelOpen] = useState(false);
+  const [routineResponse, setRoutineResponse] = useState<{ type: "bedtime" | "wakeup"; message: string; tip?: string; empathy?: string } | null>(null);
+  const respondToRoutine = trpc.routine.respondToRoutine.useMutation();
+
+  // Luister naar service worker berichten (push notification klik)
+  useEffect(() => {
+    const handler = async (event: MessageEvent) => {
+      if (event.data?.type === "ROUTINE_RESPONSE") {
+        const { routineType, response } = event.data;
+        try {
+          const result = await respondToRoutine.mutateAsync({ type: routineType, response });
+          setRoutineResponse({ type: routineType, ...result });
+          setRoutinesPanelOpen(true);
+        } catch (err) {
+          console.error("Routine response fout:", err);
+        }
+      }
+    };
+    navigator.serviceWorker?.addEventListener("message", handler);
+    // Check URL params bij app open via push notificatie
+    const params = new URLSearchParams(window.location.search);
+    const routineParam = params.get("routine") as "bedtime" | "wakeup" | null;
+    const responseParam = params.get("response") as "yes" | "no" | null;
+    if (routineParam && responseParam) {
+      respondToRoutine.mutateAsync({ type: routineParam, response: responseParam }).then((result) => {
+        setRoutineResponse({ type: routineParam, ...result });
+        setRoutinesPanelOpen(true);
+        window.history.replaceState({}, "", "/chat");
+      }).catch(console.error);
+    }
+    return () => navigator.serviceWorker?.removeEventListener("message", handler);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // --- 30-minuten inactiviteits-reset ---
   const INACTIVITY_MS = 30 * 60 * 1000;
@@ -487,6 +521,23 @@ export default function Chat() {
 
   return (
     <div className="flex flex-col h-screen bg-background">
+      {/* Routines knop */}
+      <div className="flex justify-end px-4 pt-3">
+        <button
+          onClick={() => setRoutinesPanelOpen(true)}
+          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground border rounded-full px-3 py-1.5 hover:bg-muted transition-colors"
+        >
+          <span>🔔</span>
+          <span>Routines</span>
+        </button>
+      </div>
+      {/* Routines paneel */}
+      <RoutinesPanel
+        isOpen={routinesPanelOpen}
+        onClose={() => setRoutinesPanelOpen(false)}
+        routineResponse={routineResponse}
+        onClearResponse={() => setRoutineResponse(null)}
+      />
       {/* Chat messages area */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((msg, index) => (

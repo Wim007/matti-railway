@@ -1,5 +1,6 @@
 import "dotenv/config";
 import express from "express";
+import { startPushScheduler } from "../pushScheduler";
 import { createServer } from "http";
 import net from "net";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
@@ -56,6 +57,7 @@ async function startServer() {
 
   server.listen(port, () => {
     console.log(`Server running on http://localhost:${port}/`);
+    startPushScheduler();
   });
 }
 
