@@ -467,7 +467,7 @@ export const chatRouter = router({
           // Genereer samenvatting voor caching als die er nog niet is
           let finalSummary = convo.summary;
           if (!finalSummary) {
-            finalSummary = await generateConversationSummary(msgs) ?? undefined;
+            finalSummary = await generateConversationSummary(msgs);
           }
           await db
             .update(conversations)
@@ -546,7 +546,7 @@ export const chatRouter = router({
       // Genereer samenvatting als die er nog niet is
       let finalSummary = summary || convo.summary;
       if (!finalSummary) {
-        finalSummary = await generateConversationSummary(messages) ?? undefined;
+        finalSummary = await generateConversationSummary(messages);
       }
 
       await db

@@ -5,7 +5,7 @@ import { toast } from "sonner";
 interface RoutinesPanelProps {
   isOpen: boolean;
   onClose: () => void;
-  routineResponse?: { type: "bedtime" | "wakeup"; message: string; tip?: string; empathy?: string } | null;
+  routineResponse?: { type: "bedtime" | "wakeup"; message: string; tip?: string | null; empathy?: string } | null;
   onClearResponse?: () => void;
 }
 
@@ -64,7 +64,7 @@ export default function RoutinesPanel({ isOpen, onClose, routineResponse, onClea
       }
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(vapidData.publicKey),
+        applicationServerKey: urlBase64ToArrayBuffer(vapidData.publicKey),
       });
       await savePushSub.mutateAsync({ subscription: sub.toJSON() as any });
     } catch (err) {
@@ -213,9 +213,12 @@ export default function RoutinesPanel({ isOpen, onClose, routineResponse, onClea
 }
 
 // Helper: convert VAPID public key
-function urlBase64ToUint8Array(base64String: string): Uint8Array {
+function urlBase64ToArrayBuffer(base64String: string): ArrayBuffer {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
   const rawData = window.atob(base64);
-  return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
+  const sourceBytes = Uint8Array.from(Array.from(rawData, (char) => char.charCodeAt(0)));
+  const buffer = new ArrayBuffer(sourceBytes.length);
+  new Uint8Array(buffer).set(sourceBytes);
+  return buffer;
 }

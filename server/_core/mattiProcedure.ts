@@ -24,6 +24,7 @@ export const mattiProcedure = publicProcedure.use(async ({ ctx, next }) => {
     name: ctx.req.headers["x-matti-user-name"] as string || "Gebruiker",
     age: parseInt(ctx.req.headers["x-matti-user-age"] as string || "0") || undefined,
     gender: ctx.req.headers["x-matti-user-gender"] as "boy" | "girl" | "other" | "prefer_not_to_say" | "none" || "none",
+    postalCode: ctx.req.headers["x-matti-user-postal-code"] as string | undefined,
   };
   
   return next({
