@@ -3,12 +3,19 @@ import { getDb } from "./db";
 import { routines, pushSubscriptions } from "../drizzle/schema-postgres";
 import { eq } from "drizzle-orm";
 
-const VAPID_PUBLIC = process.env.VAPID_PUBLIC_KEY || "";
-const VAPID_PRIVATE = process.env.VAPID_PRIVATE_KEY || "";
-const VAPID_EMAIL = process.env.VAPID_EMAIL || "mailto:info@slimmemaatjes.online";
+// Strip whitespace/newlines from keys (Railway kan regelafbrekingen toevoegen)
+const VAPID_PUBLIC = (process.env.VAPID_PUBLIC_KEY || "").replace(/\s/g, "");
+const VAPID_PRIVATE = (process.env.VAPID_PRIVATE_KEY || "").replace(/\s/g, "");
+const VAPID_EMAIL = (process.env.VAPID_EMAIL || "mailto:info@slimmemaatjes.online").trim();
 
+let vapidConfigured = false;
 if (VAPID_PUBLIC && VAPID_PRIVATE) {
-  webpush.setVapidDetails(VAPID_EMAIL, VAPID_PUBLIC, VAPID_PRIVATE);
+  try {
+    webpush.setVapidDetails(VAPID_EMAIL, VAPID_PUBLIC, VAPID_PRIVATE);
+    vapidConfigured = true;
+  } catch (err: any) {
+    console.warn("[PushScheduler] Ongeldige VAPID keys — push notifications uitgeschakeld:", err.message);
+  }
 }
 
 function getCurrentTime(): string {
@@ -19,7 +26,7 @@ function getCurrentTime(): string {
 }
 
 async function sendRoutineNotifications() {
-  if (!VAPID_PUBLIC || !VAPID_PRIVATE) return;
+  if (!vapidConfigured) return;
   const db = await getDb();
   if (!db) return;
 
@@ -80,8 +87,8 @@ async function sendRoutineNotifications() {
 }
 
 export function startPushScheduler() {
-  if (!VAPID_PUBLIC || !VAPID_PRIVATE) {
-    console.warn("[PushScheduler] VAPID keys niet ingesteld — push notifications uitgeschakeld");
+  if (!vapidConfigured) {
+    console.warn("[PushScheduler] VAPID keys niet ingesteld of ongeldig — push notifications uitgeschakeld");
     return;
   }
   console.log("[PushScheduler] Gestart — controleert elke minuut");
