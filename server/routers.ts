@@ -10,6 +10,7 @@ import { chatRouter } from "./chatRouter";
 import { followUpContextRouter } from "./followUpContextRouter";
 import { feedbackRouter } from "./feedbackRouter";
 import { routineRouter } from "./routineRouter";
+import { goalsRouter } from "./goalsRouter";
 
 export const appRouter = router({
   system: systemRouter,
@@ -37,6 +38,7 @@ export const appRouter = router({
   followUpContext: followUpContextRouter,
   feedback: feedbackRouter,
   routine: routineRouter,
+  goals: goalsRouter,
 });
 
 export type AppRouter = typeof appRouter;

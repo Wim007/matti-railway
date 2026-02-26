@@ -44,6 +44,23 @@ async function runMigrations() {
     // Add theme tracking columns to conversations if not yet present
     await pool.query(`ALTER TABLE conversations ADD COLUMN IF NOT EXISTS "previousThemeId" text;`);
     await pool.query(`ALTER TABLE conversations ADD COLUMN IF NOT EXISTS "themeChangedAt" timestamp;`);
+    // Goals layer
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS goals (
+        id SERIAL PRIMARY KEY,
+        "userId" VARCHAR(255) NOT NULL,
+        title TEXT NOT NULL,
+        description TEXT,
+        status TEXT NOT NULL DEFAULT 'draft',
+        "goalType" TEXT NOT NULL,
+        "targetDate" TIMESTAMP,
+        "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+        "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW()
+      );
+    `);
+    await pool.query(`ALTER TABLE actions ADD COLUMN IF NOT EXISTS "goalId" INTEGER;`);
+    await pool.query(`ALTER TABLE actions ADD COLUMN IF NOT EXISTS sequence INTEGER;`);
+    await pool.query(`ALTER TABLE actions ADD COLUMN IF NOT EXISTS "isActiveStep" BOOLEAN DEFAULT FALSE;`);
     console.log("[Migrations] Tabellen en kolommen zijn aanwezig");
   } catch (err) {
     console.error("[Migrations] Fout bij uitvoeren migraties:", err);

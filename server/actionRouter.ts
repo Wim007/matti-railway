@@ -2,8 +2,8 @@ import { z } from "zod";
 import { router } from "./_core/trpc";
 import { mattiProcedure } from "./_core/mattiProcedure";
 import { getDb } from "./db";
-import { actions, followUps } from "../drizzle/schema";
-import { eq, and, desc, lte } from "drizzle-orm";
+import { actions, followUps, goals } from "../drizzle/schema";
+import { eq, and, desc, lte, asc } from "drizzle-orm";
 import type { ThemeId } from "@shared/matti-types";
 import { notifyOwner } from "./_core/notification";
 
@@ -193,6 +193,61 @@ export const actionRouter = router({
             eq(followUps.actionId, actionId),
             eq(followUps.status, "pending")
           ));
+      }
+
+      // Sequential activation: if this action belongs to a goal and is completed,
+      // deactivate it and activate the next step in sequence.
+      const currentAction = existing[0] as any;
+      if (status === "completed" && currentAction?.goalId && currentAction?.sequence !== null) {
+        const goalId = currentAction.goalId;
+        const currentSequence = currentAction.sequence as number;
+
+        // Deactivate current step
+        await db
+          .update(actions)
+          .set({ isActiveStep: false, updatedAt: new Date() })
+          .where(eq(actions.id, actionId));
+
+        // Find next pending step in the same goal (higher sequence)
+        const nextSteps = await db
+          .select()
+          .from(actions)
+          .where(and(eq(actions.goalId, goalId), eq(actions.status, "pending")))
+          .orderBy(asc(actions.sequence));
+
+        const nextStep = (nextSteps as any[]).find(
+          (a) => a.sequence !== null && a.sequence > currentSequence
+        );
+
+        if (nextStep) {
+          // Activate next step
+          await db
+            .update(actions)
+            .set({ isActiveStep: true, updatedAt: new Date() })
+            .where(eq(actions.id, nextStep.id));
+
+          // Schedule follow-ups for next step (Day 2, 4)
+          const GOAL_FOLLOW_UP_INTERVALS = [2, 4];
+          const now = new Date();
+          for (const intervalDays of GOAL_FOLLOW_UP_INTERVALS) {
+            const scheduledFor = new Date(now);
+            scheduledFor.setDate(scheduledFor.getDate() + intervalDays);
+            scheduledFor.setHours(18, 0, 0, 0);
+            await db.insert(followUps).values({
+              actionId: nextStep.id,
+              scheduledFor,
+              status: "pending",
+            });
+          }
+          console.log(`[Goals] Activated next step #${nextStep.id} (seq ${nextStep.sequence}) for goal #${goalId}`);
+        } else {
+          // No more steps — mark goal as completed
+          await db
+            .update(goals)
+            .set({ status: "completed", updatedAt: new Date() })
+            .where(eq(goals.id, goalId));
+          console.log(`[Goals] Goal #${goalId} completed — all steps done.`);
+        }
       }
 
       console.log(`[ActionTracking] Action ${actionId} status updated to:`, status);

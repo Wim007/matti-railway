@@ -21,6 +21,16 @@ export const outcomeEnum = pgEnum("outcome", ["unresolved", "in_progress", "reso
 export const statusEnum = pgEnum("status", ["pending", "completed", "cancelled"]);
 export const followUpStatusEnum = pgEnum("followUpStatus", ["pending", "sent", "responded", "skipped"]);
 export const ratingEnum = pgEnum("rating", ["up", "down"]);
+export const goalStatusEnum = pgEnum("goalStatus", ["draft", "active", "paused", "completed"]);
+export const goalTypeEnum = pgEnum("goalType", [
+  "sleep",
+  "procrastination",
+  "planning",
+  "confidence",
+  "bullying",
+  "mental_rest",
+  "custom"
+]);
 
 /**
  * Core user table backing auth flow.
@@ -95,6 +105,20 @@ export const conversations = pgTable("conversations", {
 });
 
 /**
+ * Goals table - tracks user goals with sequential action plans
+ */
+export const goals = pgTable("goals", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  userId: varchar("userId", { length: 255 }).notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  status: goalStatusEnum("status").default("draft").notNull(),
+  goalType: goalTypeEnum("goalType").notNull(),
+  targetDate: timestamp("targetDate"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+});
+/**
  * Actions table - tracks detected actions and follow-ups
  */
 export const actions = pgTable("actions", {
@@ -108,6 +132,10 @@ export const actions = pgTable("actions", {
   followUpScheduled: timestamp("followUpScheduled"), // When follow-up is scheduled
   followUpIntervals: json("followUpIntervals").$type<number[]>(), // Array of intervals in days [2, 4, 7, 10, 14, 21]
   completedAt: timestamp("completedAt"),
+  // Goals layer (nullable — existing actions without goals are unaffected)
+  goalId: integer("goalId"),
+  sequence: integer("sequence"),
+  isActiveStep: boolean("isActiveStep").default(false),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
@@ -184,6 +212,8 @@ export type Analytics = typeof analytics.$inferSelect;
 export type InsertAnalytics = typeof analytics.$inferInsert;
 export type MessageFeedback = typeof messageFeedback.$inferSelect;
 export type InsertMessageFeedback = typeof messageFeedback.$inferInsert;
+export type Goal = typeof goals.$inferSelect;
+export type InsertGoal = typeof goals.$inferInsert;
 
 /**
  * Routines table - stores sleep routine settings per user
