@@ -366,12 +366,101 @@ export const chatRouter = router({
         updateData.interventionEndDate = new Date();
       }
 
+      // Fetch the conversation's authoritative themeId for analytics
+      const convoForTheme = await db
+        .select({ themeId: conversations.themeId })
+        .from(conversations)
+        .where(eq(conversations.id, conversationId))
+        .limit(1);
+      const themeId = convoForTheme[0]?.themeId ?? null;
+
       await db
         .update(conversations)
         .set(updateData)
         .where(eq(conversations.id, conversationId));
 
-      return { success: true };
+      return { success: true, themeId };
+    }),
+
+  /**
+   * Change primary theme of an active conversation (explicit frontend action only).
+   * Stores previousThemeId and themeChangedAt for full traceability.
+   */
+  changePrimaryTheme: mattiProcedure
+    .input(z.object({
+      conversationId: z.number(),
+      newThemeId: themeIdEnum,
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      const { conversationId, newThemeId } = input;
+      const existing = await db
+        .select({ themeId: conversations.themeId, isArchived: conversations.isArchived })
+        .from(conversations)
+        .where(eq(conversations.id, conversationId))
+        .limit(1);
+      if (existing.length === 0) throw new Error("Conversation not found");
+      if (existing[0].isArchived) throw new Error("Cannot change theme of archived conversation");
+      const previousThemeId = existing[0].themeId;
+      await db
+        .update(conversations)
+        .set({
+          themeId: newThemeId as ThemeId,
+          previousThemeId: previousThemeId as ThemeId,
+          themeChangedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(conversations.id, conversationId));
+      console.log(`[ThemeLock] Theme changed for conversation ${conversationId}: ${previousThemeId} → ${newThemeId}`);
+      return { success: true, previousThemeId };
+    }),
+
+  /**
+   * Inject a follow-up check into the original conversation as a system message.
+   * Called by the follow-up scheduler when a follow-up is due.
+   * Marks the follow-up as sent and adds it to the conversation history.
+   */
+  injectFollowUpIntoChat: mattiProcedure
+    .input(z.object({
+      conversationId: z.number(),
+      followUpId: z.number(),
+      actionId: z.number(),
+      actionText: z.string(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      const { conversationId, followUpId, actionId, actionText } = input;
+      const convoResult = await db
+        .select()
+        .from(conversations)
+        .where(eq(conversations.id, conversationId))
+        .limit(1);
+      if (convoResult.length === 0) throw new Error("Conversation not found");
+      const convo = convoResult[0];
+      const currentMessages = (convo.messages as Array<any>) || [];
+      const followUpMessage = {
+        role: "system",
+        type: "follow_up",
+        actionId,
+        content: `Follow-up check voor actie: "${actionText}". Hoe gaat het ermee?`,
+        timestamp: new Date().toISOString(),
+      };
+      await db
+        .update(conversations)
+        .set({
+          messages: [...currentMessages, followUpMessage] as any,
+          updatedAt: new Date(),
+        })
+        .where(eq(conversations.id, conversationId));
+      const { followUps } = await import("../drizzle/schema");
+      await db
+        .update(followUps)
+        .set({ status: "sent", notificationSent: new Date() })
+        .where(eq(followUps.id, followUpId));
+      console.log(`[FollowUp] Injected follow-up #${followUpId} into conversation #${conversationId}`);
+      return { success: true, conversationId, followUpMessage };
     }),
 
   /**

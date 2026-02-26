@@ -41,7 +41,10 @@ async function runMigrations() {
         "updatedAt" timestamp NOT NULL DEFAULT now()
       );
     `);
-    console.log("[Migrations] Tabellen routines en pushSubscriptions zijn aanwezig");
+    // Add theme tracking columns to conversations if not yet present
+    await pool.query(`ALTER TABLE conversations ADD COLUMN IF NOT EXISTS "previousThemeId" text;`);
+    await pool.query(`ALTER TABLE conversations ADD COLUMN IF NOT EXISTS "themeChangedAt" timestamp;`);
+    console.log("[Migrations] Tabellen en kolommen zijn aanwezig");
   } catch (err) {
     console.error("[Migrations] Fout bij uitvoeren migraties:", err);
   } finally {
