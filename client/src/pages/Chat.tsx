@@ -5,7 +5,7 @@ import { useMattiTheme } from "@/contexts/MattiThemeContext";
 import { detectActionIntelligent } from "@shared/action-detection";
 import { generateWelcomeMessage } from "@shared/welcome-message";
 import { toast } from "sonner";
-import { useRoute } from "wouter";
+import { useRoute, useLocation } from "wouter";
 import BottomNavigation from "@/components/BottomNavigation";
 import RoutinesPanel from "@/components/RoutinesPanel";
 
@@ -22,6 +22,7 @@ function getUserProfile(): UserProfile | null {
 }
 
 export default function Chat() {
+  const [, navigate] = useLocation();
   const [userProfile] = useState<UserProfile | null>(() => getUserProfile());
   const { currentThemeId, setCurrentThemeId } = useMattiTheme();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -524,10 +525,10 @@ export default function Chat() {
       {/* Routines knop */}
       <div className="flex justify-end px-4 pt-3">
         <button
-          onClick={() => setRoutinesPanelOpen(true)}
+          onClick={() => navigate("/goals")}
           className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground border rounded-full px-3 py-1.5 hover:bg-muted transition-colors"
         >
-          <span>🔔</span>
+          <span>🎯</span>
           <span>Doelen</span>
         </button>
       </div>
