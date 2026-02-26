@@ -7,6 +7,47 @@ import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
+import pg from "pg";
+
+const { Pool } = pg;
+
+async function runMigrations() {
+  if (!process.env.DATABASE_URL) {
+    console.warn("[Migrations] DATABASE_URL niet ingesteld — migraties overgeslagen");
+    return;
+  }
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
+  });
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS "routines" (
+        "id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+        "userId" varchar(255) NOT NULL UNIQUE,
+        "sleepEnabled" boolean NOT NULL DEFAULT false,
+        "bedtime" varchar(5) NOT NULL DEFAULT '22:00',
+        "wakeTime" varchar(5) NOT NULL DEFAULT '07:00',
+        "createdAt" timestamp NOT NULL DEFAULT now(),
+        "updatedAt" timestamp NOT NULL DEFAULT now()
+      );
+    `);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS "pushSubscriptions" (
+        "id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+        "userId" varchar(255) NOT NULL UNIQUE,
+        "subscription" text NOT NULL,
+        "createdAt" timestamp NOT NULL DEFAULT now(),
+        "updatedAt" timestamp NOT NULL DEFAULT now()
+      );
+    `);
+    console.log("[Migrations] Tabellen routines en pushSubscriptions zijn aanwezig");
+  } catch (err) {
+    console.error("[Migrations] Fout bij uitvoeren migraties:", err);
+  } finally {
+    await pool.end();
+  }
+}
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -28,6 +69,9 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 }
 
 async function startServer() {
+  // Run migrations first
+  await runMigrations();
+
   const app = express();
   const server = createServer(app);
   // Configure body parser with larger size limit for file uploads
