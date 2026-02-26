@@ -6,6 +6,41 @@ import { conversations } from "../drizzle/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 import type { ThemeId } from "@shared/matti-types";
 import { ENV } from "./_core/env";
+import { readFileSync } from "fs";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+let _mattiInstructions: string | null = null;
+function getMattiInstructions(): string {
+  if (!_mattiInstructions) {
+    _mattiInstructions = readFileSync(join(__dirname, '..', 'matti-instructions.md'), 'utf-8');
+  }
+  return _mattiInstructions;
+}
+
+async function callOpenAIForFollowUp(messages: Array<{ role: string; content: string }>): Promise<string> {
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${ENV.openaiApiKey}`,
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o',
+      messages,
+      temperature: 0.8,
+      max_tokens: 500,
+    }),
+  });
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`OpenAI API error: ${response.status} ${errorText}`);
+  }
+  const data = await response.json() as any;
+  return data.choices?.[0]?.message?.content ?? '';
+}
 
 /**
  * Genereer een beknopte samenvatting van een gesprek via OpenAI
@@ -460,7 +495,62 @@ export const chatRouter = router({
         .set({ status: "sent", notificationSent: new Date() })
         .where(eq(followUps.id, followUpId));
       console.log(`[FollowUp] Injected follow-up #${followUpId} into conversation #${conversationId}`);
-      return { success: true, conversationId, followUpMessage };
+
+      // Auto-trigger AI response within the same conversation
+      let aiReply: string | null = null;
+      try {
+        // Build context: last 8 messages (cost-efficient window)
+        const recentMessages = [...currentMessages, followUpMessage].slice(-8);
+        const contextText = recentMessages
+          .filter((m: any) => m.role === 'user' || m.role === 'assistant')
+          .map((m: any) => `${m.role === 'user' ? 'Gebruiker' : 'Matti'}: ${m.content}`)
+          .join('\n');
+
+        const systemPrompt = getMattiInstructions() +
+          `\n\n[FOLLOW-UP CONTEXT]\nDit is een automatische follow-up check. ` +
+          `De gebruiker heeft eerder de actie "${actionText}" afgesproken. ` +
+          `Reageer warm en coachend. Vraag hoe het is gegaan met deze actie. ` +
+          `Wees kort (max 2-3 zinnen). Geen nieuwe acties voorstellen.`;
+
+        const aiMessages: Array<{ role: string; content: string }> = [
+          { role: 'system', content: systemPrompt },
+        ];
+        if (contextText) {
+          aiMessages.push({
+            role: 'user',
+            content: `[GESPREKSGESCHIEDENIS]\n${contextText}\n\n---\n\n[FOLLOW-UP TRIGGER]`,
+          });
+        }
+        aiMessages.push({
+          role: 'user',
+          content: `Follow-up check voor actie: "${actionText}". Hoe gaat het ermee?`,
+        });
+
+        aiReply = await callOpenAIForFollowUp(aiMessages);
+
+        const aiMessage = {
+          role: 'assistant',
+          content: aiReply,
+          timestamp: new Date().toISOString(),
+        };
+
+        const messagesWithAI = [...currentMessages, followUpMessage, aiMessage];
+        await db
+          .update(conversations)
+          .set({
+            messages: messagesWithAI as any,
+            conversationCount: sql`${conversations.conversationCount} + 1`,
+            updatedAt: new Date(),
+          })
+          .where(eq(conversations.id, conversationId));
+
+        console.log(`[FollowUp] AI response generated for follow-up #${followUpId}`);
+      } catch (aiError) {
+        console.error(`[FollowUp] AI response failed for follow-up #${followUpId}:`, aiError);
+        // Non-fatal: follow-up message is already stored, AI response is optional
+      }
+
+      return { success: true, conversationId, followUpMessage, aiReply };
     }),
 
   /**
