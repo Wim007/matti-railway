@@ -82,7 +82,7 @@ export default function RoutinesPanel({ isOpen, onClose, routineResponse, onClea
       }
       await saveRoutine.mutateAsync({ sleepEnabled, bedtime, wakeTime });
       await refetchRoutine();
-      toast.success("Routine opgeslagen!");
+      toast.success("Doel opgeslagen!");
     } catch (err) {
       toast.error("Opslaan mislukt. Probeer opnieuw.");
     } finally {
@@ -100,7 +100,7 @@ export default function RoutinesPanel({ isOpen, onClose, routineResponse, onClea
       {/* Panel */}
       <div className="relative w-80 max-w-full h-full bg-background shadow-xl flex flex-col overflow-y-auto">
         <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="font-bold text-lg">Routines</h2>
+          <h2 className="font-bold text-lg">Doelen</h2>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground text-xl leading-none">✕</button>
         </div>
 

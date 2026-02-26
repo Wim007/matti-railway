@@ -528,7 +528,7 @@ export default function Chat() {
           className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground border rounded-full px-3 py-1.5 hover:bg-muted transition-colors"
         >
           <span>🔔</span>
-          <span>Routines</span>
+          <span>Doelen</span>
         </button>
       </div>
       {/* Routines paneel */}
