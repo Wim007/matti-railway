@@ -87,9 +87,15 @@ export default function GoalDetail() {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 p-6">
         <p className="text-muted-foreground">Doel niet gevonden.</p>
-        <Button onClick={() => navigate("/actions")} variant="outline">Terug</Button>
+        <Button onClick={() => navigate("/goals")} variant="outline">Terug</Button>
       </div>
     );
+  }
+
+  // Guard: als goal geen stappen heeft, is de intake niet voltooid — redirect naar /goals
+  if (!goal.steps || goal.steps.length === 0) {
+    navigate("/goals");
+    return null;
   }
 
   const { completed, total } = goal.progress;

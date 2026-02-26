@@ -305,5 +305,122 @@ export const goalsRouter = router({
         progress: { completed, total },
       };
     }),
+
+  /**
+   * Generate 2 intake questions for a goal type.
+   * Used by the chat goal_intake mode before plan generation.
+   */
+  generateIntakeQuestions: mattiProcedure
+    .input(
+      z.object({
+        goalTitle: z.string(),
+        goalType: z.string(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const { goalTitle, goalType } = input;
+      const prompt = `Je bent Matti, een coachende AI voor jongeren (12-21 jaar).
+Een jongere wil werken aan: "${goalTitle}" (type: ${goalType}).
+Genereer precies 2 korte, vriendelijke intakevragen om de situatie beter te begrijpen.
+Regels:
+- Max 1 zin per vraag
+- Spreek de jongere aan met "je"
+- Geen dubbele vragen
+- Geef ALLEEN geldige JSON terug, geen markdown:
+["vraag 1", "vraag 2"]`;
+
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${ENV.openaiApiKey}`,
+        },
+        body: JSON.stringify({
+          ...aiProfiles.structured,
+          messages: [{ role: "user", content: prompt }],
+        }),
+      });
+      if (!response.ok) throw new Error(`OpenAI error: ${response.status}`);
+      const data = (await response.json()) as any;
+      const content = data.choices?.[0]?.message?.content ?? "[]";
+      const cleaned = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+      const questions: string[] = JSON.parse(cleaned);
+      return { questions };
+    }),
+
+  /**
+   * GoalStartOrchestrator: receive intake Q&A, generate plan, create goal + actions, return goalId.
+   * Single backend entry point for starting a goal via chat intake.
+   */
+  finalizeGoalFromIntake: mattiProcedure
+    .input(
+      z.object({
+        goalTitle: z.string(),
+        goalType: z.string(),
+        intakeQA: z.string(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      const userId = ctx.user.id;
+      const { goalTitle, goalType, intakeQA } = input;
+
+      // 1. Create goal in draft status
+      const inserted = await db
+        .insert(goals)
+        .values({
+          userId,
+          title: goalTitle,
+          status: "draft",
+          goalType,
+        })
+        .returning({ id: goals.id });
+      const goalId = inserted[0]?.id;
+      if (!goalId) throw new Error("Failed to create goal");
+
+      // 2. Generate plan via AI
+      const plan = await generateGoalPlan(goalTitle, goalType, intakeQA);
+      if (!plan.steps || plan.steps.length < 2) {
+        throw new Error("AI returned insufficient steps");
+      }
+
+      // 3. Create actions — only first step active
+      for (const step of plan.steps) {
+        const isFirst = step.sequence === Math.min(...plan.steps.map((s) => s.sequence));
+        const actionInserted = await db
+          .insert(actions)
+          .values({
+            userId,
+            themeId: "general",
+            actionText: step.actionText,
+            status: "pending",
+            goalId,
+            sequence: step.sequence,
+            isActiveStep: isFirst,
+            followUpIntervals: GOAL_FOLLOW_UP_INTERVALS,
+          })
+          .returning({ id: actions.id });
+        const actionId = actionInserted[0]?.id;
+        if (!actionId) throw new Error(`Failed to create action for step ${step.sequence}`);
+        if (isFirst) {
+          await scheduleGoalActionFollowUps(db, actionId);
+        }
+      }
+
+      // 4. Activate goal
+      await db
+        .update(goals)
+        .set({ status: "active", updatedAt: new Date() })
+        .where(eq(goals.id, goalId));
+
+      console.log(`[Goals] Orchestrated goal #${goalId} (${goalType}) with ${plan.steps.length} steps for user ${userId}`);
+      return {
+        success: true,
+        goalId,
+        intro: plan.intro,
+        stepCount: plan.steps.length,
+      };
+    }),
 });
 export type GoalsRouter = typeof goalsRouter;

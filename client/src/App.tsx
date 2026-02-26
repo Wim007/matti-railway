@@ -21,6 +21,7 @@ import Themes from "./pages/Themes";
 import FeedbackDashboard from "./pages/FeedbackDashboard";
 import GoalDetail from "./pages/GoalDetail";
 import GoalsOverview from "./pages/GoalsOverview";
+import GoalIntakeChat from "./pages/GoalIntakeChat";
 
 function Router() {
   return (
@@ -59,6 +60,9 @@ function Router() {
       </Route>
       <Route path="/goals/:goalId">
         <ProtectedRoute><GoalDetail /></ProtectedRoute>
+      </Route>
+      <Route path="/goal-intake">
+        <ProtectedRoute><GoalIntakeChat /></ProtectedRoute>
       </Route>
 
       {/* Root welcome route intentionally after specific routes to avoid catch-all behavior */}

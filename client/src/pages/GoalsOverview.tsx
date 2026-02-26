@@ -1,6 +1,6 @@
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
-import { ArrowLeft, Target, ChevronRight, Plus, Loader2 } from "lucide-react";
+import { ArrowLeft, Target, ChevronRight, Plus } from "lucide-react";
 
 const GOAL_TEMPLATES = [
   { type: "social", emoji: "🤝", label: "Vriendschappen verbeteren" },
@@ -15,21 +15,6 @@ export default function GoalsOverview() {
   const [, navigate] = useLocation();
 
   const { data: activeGoals, isLoading } = trpc.goals.getActiveGoals.useQuery();
-
-  const startDraft = trpc.goals.startDraftGoal.useMutation({
-    onSuccess: (data) => {
-      // After starting a draft, navigate to the goal detail
-      navigate(`/goals/${data.goalId}`);
-    },
-  });
-
-  const handleTemplate = (type: string, label: string) => {
-    startDraft.mutate({
-      goalTitle: label,
-      goalType: type,
-      clarificationContext: `De gebruiker wil werken aan: ${label}`,
-    });
-  };
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -53,14 +38,14 @@ export default function GoalsOverview() {
           </h2>
 
           {isLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+            <div className="bg-muted/40 rounded-2xl p-5 text-center">
+              <p className="text-sm text-muted-foreground">Laden...</p>
             </div>
           ) : activeGoals && activeGoals.length > 0 ? (
             <div className="space-y-3">
               {activeGoals.map((goal: any) => {
-                const total = goal.totalSteps ?? 0;
-                const completed = goal.completedSteps ?? 0;
+                const total = goal.progress?.total ?? 0;
+                const completed = goal.progress?.completed ?? 0;
                 const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
                 return (
                   <button
@@ -108,9 +93,8 @@ export default function GoalsOverview() {
             {GOAL_TEMPLATES.map((t) => (
               <button
                 key={t.type}
-                onClick={() => handleTemplate(t.type, t.label)}
-                disabled={startDraft.isPending}
-                className="bg-card border border-border rounded-2xl p-4 text-left hover:shadow-md transition-all active:scale-[0.97] disabled:opacity-50"
+                onClick={() => navigate(`/goal-intake?goal=${t.type}`)}
+                className="bg-card border border-border rounded-2xl p-4 text-left hover:shadow-md transition-all active:scale-[0.97]"
               >
                 <span className="text-2xl mb-2 block">{t.emoji}</span>
                 <span className="text-sm font-medium text-foreground leading-snug">{t.label}</span>
@@ -119,7 +103,7 @@ export default function GoalsOverview() {
 
             {/* "Iets anders?" tile */}
             <button
-              onClick={() => navigate("/chat")}
+              onClick={() => navigate("/goal-intake?goal=custom")}
               className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950 border border-blue-200 dark:border-blue-800 rounded-2xl p-4 text-left hover:shadow-md transition-all active:scale-[0.97] col-span-2"
             >
               <div className="flex items-center gap-2">
@@ -129,7 +113,7 @@ export default function GoalsOverview() {
                 </span>
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                Ga naar de chat en beschrijf wat je wilt aanpakken.
+                Matti stelt je een paar vragen en maakt een plan op maat.
               </p>
             </button>
           </div>
@@ -137,15 +121,6 @@ export default function GoalsOverview() {
 
       </div>
 
-      {/* Loading overlay when starting a goal */}
-      {startDraft.isPending && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-card border border-border rounded-2xl p-6 flex flex-col items-center gap-3 shadow-xl">
-            <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
-            <p className="text-sm font-medium text-foreground">Doel wordt aangemaakt...</p>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
