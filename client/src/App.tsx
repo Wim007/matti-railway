@@ -19,6 +19,7 @@ import ParentInfo from "./pages/ParentInfo";
 import Actions from "./pages/Actions";
 import Themes from "./pages/Themes";
 import FeedbackDashboard from "./pages/FeedbackDashboard";
+import GoalDetail from "./pages/GoalDetail";
 
 function Router() {
   return (
@@ -51,6 +52,9 @@ function Router() {
       </Route>
       <Route path="/feedback-dashboard">
         <ProtectedRoute><FeedbackDashboard /></ProtectedRoute>
+      </Route>
+      <Route path="/goals/:goalId">
+        <ProtectedRoute><GoalDetail /></ProtectedRoute>
       </Route>
 
       {/* Root welcome route intentionally after specific routes to avoid catch-all behavior */}

@@ -274,6 +274,36 @@ export const goalsRouter = router({
 
     return result;
   }),
-});
 
+  /**
+   * Get a single goal by ID with all steps and progress.
+   */
+  getGoalById: mattiProcedure
+    .input(z.object({ goalId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      const userId = ctx.user.id;
+      const { goalId } = input;
+      const goalResult = await db
+        .select()
+        .from(goals)
+        .where(and(eq(goals.id, goalId), eq(goals.userId, userId)))
+        .limit(1);
+      if (goalResult.length === 0) throw new Error("Goal not found or unauthorized");
+      const goal = goalResult[0];
+      const goalActions = await db
+        .select()
+        .from(actions)
+        .where(eq(actions.goalId, goalId))
+        .orderBy(asc(actions.sequence));
+      const total = goalActions.length;
+      const completed = goalActions.filter((a) => a.status === "completed").length;
+      return {
+        ...goal,
+        steps: goalActions,
+        progress: { completed, total },
+      };
+    }),
+});
 export type GoalsRouter = typeof goalsRouter;
