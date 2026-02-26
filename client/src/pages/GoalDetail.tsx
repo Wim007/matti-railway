@@ -2,13 +2,17 @@ import { useParams, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, CheckCircle2, Circle, Trophy } from "lucide-react";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
+import confetti from "canvas-confetti";
 
 export default function GoalDetail() {
   const { goalId } = useParams<{ goalId: string }>();
   const [, navigate] = useLocation();
   const [completing, setCompleting] = useState<number | null>(null);
+  const [glowProgress, setGlowProgress] = useState(false);
+  const [feedbackMsg, setFeedbackMsg] = useState<string | null>(null);
+  const activeStepRef = useRef<HTMLDivElement | null>(null);
 
   const goalIdNum = goalId ? parseInt(goalId, 10) : null;
 
@@ -17,11 +21,47 @@ export default function GoalDetail() {
     { enabled: !!goalIdNum }
   );
 
+  // Auto-scroll to active step when data loads or updates
+  useEffect(() => {
+    if (activeStepRef.current) {
+      setTimeout(() => {
+        activeStepRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 300);
+    }
+  }, [goal]);
+
   const updateStatus = trpc.action.updateActionStatus.useMutation({
-    onSuccess: () => {
-      refetch();
+    onSuccess: async (_data, variables) => {
+      // Find which step was completed and what the next step will be
+      const completedIdx = goal?.steps.findIndex((s) => s.id === variables.actionId) ?? -1;
+      const nextStep = completedIdx >= 0 ? goal?.steps[completedIdx + 1] : null;
+      const nextStepNum = completedIdx + 2; // 1-indexed
+
+      // Confetti
+      confetti({
+        particleCount: 80,
+        spread: 60,
+        origin: { y: 0.6 },
+        colors: ["#3b82f6", "#8b5cf6", "#22c55e"],
+      });
+
+      // Progress bar glow
+      setGlowProgress(true);
+      setTimeout(() => setGlowProgress(false), 800);
+
+      // Feedback message
+      if (nextStep) {
+        setFeedbackMsg(`Stap ${completedIdx + 1} voltooid. Op naar stap ${nextStepNum}.`);
+      } else {
+        setFeedbackMsg("Alle stappen voltooid. Doel behaald! 🎉");
+      }
+
+      // Refetch and clear
+      await refetch();
       setCompleting(null);
-      toast.success("Stap voltooid! 🎉");
+
+      // Clear feedback after 4s
+      setTimeout(() => setFeedbackMsg(null), 4000);
     },
     onError: (err) => {
       setCompleting(null);
@@ -47,7 +87,7 @@ export default function GoalDetail() {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 p-6">
         <p className="text-muted-foreground">Doel niet gevonden.</p>
-        <Button onClick={() => navigate(-1)} variant="outline">Terug</Button>
+        <Button onClick={() => navigate("/actions")} variant="outline">Terug</Button>
       </div>
     );
   }
@@ -82,10 +122,22 @@ export default function GoalDetail() {
               style={{
                 width: `${progressPct}%`,
                 background: "linear-gradient(90deg, #3b82f6, #8b5cf6)",
+                boxShadow: glowProgress
+                  ? "0 0 12px 4px rgba(139,92,246,0.6)"
+                  : "none",
+                transition: "width 500ms ease, box-shadow 300ms ease",
               }}
             />
           </div>
-          {isGoalDone && (
+
+          {/* Feedback message */}
+          {feedbackMsg && (
+            <p className="mt-3 text-sm font-medium text-blue-600 dark:text-blue-400 animate-pulse">
+              {feedbackMsg}
+            </p>
+          )}
+
+          {isGoalDone && !feedbackMsg && (
             <div className="mt-4 flex items-center gap-2 text-green-600">
               <Trophy className="w-5 h-5" />
               <span className="font-semibold text-sm">Doel behaald! Goed gedaan 🎉</span>
@@ -104,6 +156,7 @@ export default function GoalDetail() {
             return (
               <div
                 key={step.id}
+                ref={isActive ? activeStepRef : null}
                 className={`rounded-2xl border p-4 transition-all ${
                   isActive
                     ? "bg-blue-50 border-blue-300 shadow-sm dark:bg-blue-950 dark:border-blue-700"
