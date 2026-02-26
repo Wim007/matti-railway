@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { publicProcedure, router } from "./_core/trpc";
 import { ENV } from "./_core/env";
+import { aiProfiles } from "./_core/aiProfiles";
 import { readFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
@@ -61,7 +62,8 @@ const summarizeResponseSchema = z.object({
 /**
  * Call OpenAI Chat Completions API directly
  */
-async function callOpenAI(messages: Array<{ role: string; content: string }>, model = "gpt-4o", temperature = 0.8) {
+async function callOpenAI(messages: Array<{ role: string; content: string }>, profileKey: keyof typeof aiProfiles = "coach") {
+  const profile = aiProfiles[profileKey];
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -69,10 +71,8 @@ async function callOpenAI(messages: Array<{ role: string; content: string }>, mo
       'Authorization': `Bearer ${ENV.openaiApiKey}`,
     },
     body: JSON.stringify({
-      model,
+      ...profile,
       messages,
-      temperature,
-      max_tokens: 1000,
     }),
   });
 
@@ -146,7 +146,7 @@ export const assistantRouter = router({
         console.log('[Assistant] Messages count:', messages.length);
 
         // Call OpenAI API directly
-        const reply = await callOpenAI(messages);
+        const reply = await callOpenAI(messages, "coach");
 
         console.log('[Assistant] Response received:', reply.substring(0, 100) + '...');
         
@@ -202,8 +202,7 @@ export const assistantRouter = router({
               content: prompt
             }
           ],
-          "gpt-4o-mini",
-          0.5
+          "structured"
         );
 
         console.log('[Assistant] Summary generated:', summary.substring(0, 100) + '...');

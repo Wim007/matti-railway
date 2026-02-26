@@ -6,6 +6,7 @@ import { conversations } from "../drizzle/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 import type { ThemeId } from "@shared/matti-types";
 import { ENV } from "./_core/env";
+import { aiProfiles } from "./_core/aiProfiles";
 import { readFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
@@ -28,10 +29,8 @@ async function callOpenAIForFollowUp(messages: Array<{ role: string; content: st
       'Authorization': `Bearer ${ENV.openaiApiKey}`,
     },
     body: JSON.stringify({
-      model: 'gpt-4o',
+      ...aiProfiles.coach,
       messages,
-      temperature: 0.6,
-      max_tokens: 400,
     }),
   });
   if (!response.ok) {
@@ -69,8 +68,8 @@ async function generateConversationSummary(
           },
           { role: "user", content: transcript },
         ],
-        max_tokens: 200,
-        temperature: 0.5,
+        ...aiProfiles.structured,
+        model: "gpt-4o-mini",
       }),
     });
     if (!response.ok) return null;

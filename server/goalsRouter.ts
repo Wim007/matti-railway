@@ -5,6 +5,7 @@ import { getDb } from "./db";
 import { goals, actions, followUps } from "../drizzle/schema";
 import { eq, and, asc } from "drizzle-orm";
 import { ENV } from "./_core/env";
+import { aiProfiles } from "./_core/aiProfiles";
 
 /**
  * Goals Router
@@ -67,10 +68,8 @@ Geef ALLEEN geldige JSON terug, geen markdown, geen uitleg:
       Authorization: `Bearer ${ENV.openaiApiKey}`,
     },
     body: JSON.stringify({
-      model: "gpt-4o",
+      ...aiProfiles.plan,
       messages: [{ role: "user", content: prompt }],
-      temperature: 0.7,
-      max_tokens: 600,
     }),
   });
 
