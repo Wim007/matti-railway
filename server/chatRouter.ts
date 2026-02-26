@@ -30,8 +30,8 @@ async function callOpenAIForFollowUp(messages: Array<{ role: string; content: st
     body: JSON.stringify({
       model: 'gpt-4o',
       messages,
-      temperature: 0.8,
-      max_tokens: 500,
+      temperature: 0.6,
+      max_tokens: 400,
     }),
   });
   if (!response.ok) {
@@ -499,28 +499,46 @@ export const chatRouter = router({
       // Auto-trigger AI response within the same conversation
       let aiReply: string | null = null;
       try {
-        // Build context: last 8 messages (cost-efficient window)
-        const recentMessages = [...currentMessages, followUpMessage].slice(-8);
-        const contextText = recentMessages
-          .filter((m: any) => m.role === 'user' || m.role === 'assistant')
-          .map((m: any) => `${m.role === 'user' ? 'Gebruiker' : 'Matti'}: ${m.content}`)
-          .join('\n');
-
+        // Build optimized context: summary + action + last 6 messages
         const systemPrompt = getMattiInstructions() +
-          `\n\n[FOLLOW-UP CONTEXT]\nDit is een automatische follow-up check. ` +
-          `De gebruiker heeft eerder de actie "${actionText}" afgesproken. ` +
-          `Reageer warm en coachend. Vraag hoe het is gegaan met deze actie. ` +
+          `\n\n[FOLLOW-UP INSTRUCTIE]\nDit is een automatische follow-up check. ` +
+          `Reageer warm en coachend. Vraag hoe het is gegaan met de actie. ` +
           `Wees kort (max 2-3 zinnen). Geen nieuwe acties voorstellen.`;
 
         const aiMessages: Array<{ role: string; content: string }> = [
           { role: 'system', content: systemPrompt },
         ];
-        if (contextText) {
+
+        // A. Conversation summary (if available)
+        const summary = convo.summary as string | null;
+        if (summary) {
           aiMessages.push({
-            role: 'user',
-            content: `[GESPREKSGESCHIEDENIS]\n${contextText}\n\n---\n\n[FOLLOW-UP TRIGGER]`,
+            role: 'system',
+            content: `Samenvatting van het gesprek tot nu toe: ${summary}`,
           });
         }
+
+        // B. Explicit action context
+        aiMessages.push({
+          role: 'system',
+          content: `Dit is de actie waarop wordt opgevolgd: "${actionText}"`,
+        });
+
+        // C. Last 6 user/assistant messages
+        const last6 = currentMessages
+          .filter((m: any) => m.role === 'user' || m.role === 'assistant')
+          .slice(-6);
+        if (last6.length > 0) {
+          const contextText = last6
+            .map((m: any) => `${m.role === 'user' ? 'Gebruiker' : 'Matti'}: ${m.content}`)
+            .join('\n');
+          aiMessages.push({
+            role: 'user',
+            content: `[RECENTE BERICHTEN]\n${contextText}`,
+          });
+        }
+
+        // D. Follow-up trigger
         aiMessages.push({
           role: 'user',
           content: `Follow-up check voor actie: "${actionText}". Hoe gaat het ermee?`,
