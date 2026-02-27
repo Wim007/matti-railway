@@ -7,19 +7,10 @@ import { eq, and, desc, sql } from "drizzle-orm";
 import type { ThemeId } from "@shared/matti-types";
 import { ENV } from "./_core/env";
 import { aiProfiles } from "./_core/aiProfiles";
-import { readFileSync } from "fs";
-import { join, dirname } from "path";
-import { fileURLToPath } from "url";
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+import { loadAssistant } from "./core/loadAssistant";
 
-let _mattiInstructions: string | null = null;
-function getMattiInstructions(): string {
-  if (!_mattiInstructions) {
-    _mattiInstructions = readFileSync(join(__dirname, '..', 'matti-instructions.md'), 'utf-8');
-  }
-  return _mattiInstructions;
-}
+// Load assistant config (defaults to Matti; override via ASSISTANT_TYPE env var)
+const assistantConfig = loadAssistant();
 
 async function callOpenAIForFollowUp(messages: Array<{ role: string; content: string }>): Promise<string> {
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -50,7 +41,7 @@ async function generateConversationSummary(
   if (!ENV.openaiApiKey || messages.length === 0) return null;
   try {
     const transcript = messages
-      .map((m) => `${m.role === "user" ? "Gebruiker" : "Matti"}: ${m.content}`)
+      .map((m) => `${m.role === "user" ? "Gebruiker" : assistantConfig.name}: ${m.content}`)
       .join("\n");
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -499,7 +490,7 @@ export const chatRouter = router({
       let aiReply: string | null = null;
       try {
         // Build optimized context: summary + action + last 6 messages
-        const systemPrompt = getMattiInstructions() +
+        const systemPrompt = assistantConfig.systemPrompt +
           `\n\n[FOLLOW-UP INSTRUCTIE]\nDit is een automatische follow-up check. ` +
           `Reageer warm en coachend. Vraag hoe het is gegaan met de actie. ` +
           `Wees kort (max 2-3 zinnen). Geen nieuwe acties voorstellen.`;
@@ -529,7 +520,7 @@ export const chatRouter = router({
           .slice(-6);
         if (last6.length > 0) {
           const contextText = last6
-            .map((m: any) => `${m.role === 'user' ? 'Gebruiker' : 'Matti'}: ${m.content}`)
+            .map((m: any) => `${m.role === 'user' ? 'Gebruiker' : assistantConfig.name}: ${m.content}`)
             .join('\n');
           aiMessages.push({
             role: 'user',

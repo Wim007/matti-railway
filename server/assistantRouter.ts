@@ -2,14 +2,10 @@ import { z } from "zod";
 import { publicProcedure, router } from "./_core/trpc";
 import { ENV } from "./_core/env";
 import { aiProfiles } from "./_core/aiProfiles";
-import { readFileSync } from "fs";
-import { join, dirname } from "path";
-import { fileURLToPath } from "url";
 import { detectRisk, detectCrisisResponse } from "@shared/risk-detection";
 import { detectTheme } from "@shared/theme-detection-comprehensive";
+import { loadAssistant } from "./core/loadAssistant";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 /**
  * OpenAI Chat Completions Router
@@ -18,11 +14,8 @@ const __dirname = dirname(__filename);
  * Uses Chat Completions API instead of deprecated Assistants API
  */
 
-// Load Matti instructions from file
-const MATTI_INSTRUCTIONS = readFileSync(
-  join(__dirname, '..', 'matti-instructions.md'),
-  'utf-8'
-);
+// Load assistant config (defaults to Matti; override via ASSISTANT_TYPE env var)
+const assistantConfig = loadAssistant();
 
 // Request schema
 const chatRequestSchema = z.object({
@@ -110,7 +103,7 @@ export const assistantRouter = router({
         }
 
         // Build system message with Matti instructions + user context + follow-up context + crisis guidance
-        let systemMessage = MATTI_INSTRUCTIONS + userContext;
+        let systemMessage = assistantConfig.systemPrompt + userContext;
         
         // Add follow-up context if provided (for welcome messages)
         if (followUpContext) {
