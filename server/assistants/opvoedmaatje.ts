@@ -8,16 +8,19 @@ const __dirname = dirname(__filename);
 /**
  * Opvoedmaatje assistant configuration.
  *
- * systemPrompt is temporarily identical to Matti's (matti-instructions.md).
- * Replace with a dedicated opvoedmaatje-instructions.md when ready.
+ * systemPrompt is loaded from server/opvoedmaatje-instructions.md.
+ * After esbuild bundling, __dirname resolves to /app/dist,
+ * so one level up (..) reaches /app/opvoedmaatje-instructions.md.
+ *
+ * To activate: set ASSISTANT_TYPE=opvoedmaatje in Railway environment variables.
+ * Matti remains the default when ASSISTANT_TYPE is absent.
  */
 export const opvoedmaatjeConfig = {
   name: "Opvoedmaatje",
   logo: "/assets/opvoedmaatje-logo.svg",
   primaryColor: "#2F6BFF",
   get systemPrompt(): string {
-    // Temporary: reuse Matti's instructions until Opvoedmaatje has its own prompt
-    return readFileSync(join(__dirname, "..", "matti-instructions.md"), "utf-8");
+    return readFileSync(join(__dirname, "..", "opvoedmaatje-instructions.md"), "utf-8");
   },
 };
 
