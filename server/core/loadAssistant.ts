@@ -1,25 +1,29 @@
-import { mattiConfig, type AssistantConfig } from "../assistants/matti";
+import { mattiConfig } from "../assistants/matti";
+import { opvoedmaatjeConfig } from "../assistants/opvoedmaatje";
+
+export type AssistantConfig = typeof mattiConfig;
 
 /**
  * loadAssistant()
  *
  * Returns the active assistant config based on ASSISTANT_TYPE env var.
- * Defaults to "matti" when the variable is absent.
+ * Defaults to "matti" when the variable is absent — Matti keeps working unchanged.
  *
- * To add a new assistant:
- *   1. Create /server/assistants/<name>.ts with the same shape as mattiConfig
- *   2. Import it here and add a case to the switch
- *   3. Set ASSISTANT_TYPE=<name> in the deployment environment
+ * To activate Opvoedmaatje in a separate deployment:
+ *   Set ASSISTANT_TYPE=opvoedmaatje in that environment's Railway variables.
  */
 export function loadAssistant(): AssistantConfig {
   const type = process.env.ASSISTANT_TYPE ?? "matti";
 
   switch (type) {
-    case "matti":
-      return mattiConfig;
+    case "opvoedmaatje":
+      return opvoedmaatjeConfig;
 
+    case "matti":
     default:
-      console.warn(`[loadAssistant] Unknown ASSISTANT_TYPE "${type}", falling back to matti`);
+      if (type !== "matti") {
+        console.warn(`[loadAssistant] Unknown ASSISTANT_TYPE "${type}", falling back to matti`);
+      }
       return mattiConfig;
   }
 }
