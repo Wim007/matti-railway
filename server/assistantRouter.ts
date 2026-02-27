@@ -16,6 +16,7 @@ import { loadAssistant } from "./core/loadAssistant";
 
 // Load assistant config (defaults to Matti; override via ASSISTANT_TYPE env var)
 const assistantConfig = loadAssistant();
+const ASSISTANT_TYPE = process.env.ASSISTANT_TYPE ?? "matti";
 
 // Request schema
 const chatRequestSchema = z.object({
@@ -27,8 +28,28 @@ const chatRequestSchema = z.object({
     age: z.number(),
     gender: z.enum(['boy', 'girl', 'other', 'prefer_not_to_say']),
   }).optional(), // User context for empathymap
+  // Opvoedmaatje: profile of the parent
+  parentProfile: z.object({
+    name: z.string().optional(),
+    language: z.string().optional(),
+    goals: z.array(z.string()).optional(),
+    burdenNote: z.string().optional(),
+  }).optional(),
+
+  // Opvoedmaatje: children in the household
+  children: z.array(z.object({
+    id: z.string(),
+    name: z.string(),
+    age: z.number(),
+    gender: z.enum(['boy', 'girl', 'unknown']).optional(),
+    summary: z.string().optional(),
+  })).optional(),
+
+  // Opvoedmaatje: which child is currently in focus
+  currentChildId: z.string().optional(),
+
   followUpContext: z.string().optional(), // Compact follow-up context for welcome messages
-  crisisGuidance: z.string().optional(), // Crisis protocol guidance for AI to follow
+  crisisGuidance: z.string().optional(),  // Crisis protocol guidance for AI to follow
 });
 
 // Response schema
@@ -78,6 +99,67 @@ async function callOpenAI(messages: Array<{ role: string; content: string }>, pr
   return data.choices[0]?.message?.content || '';
 }
 
+
+/**
+ * Build the user context block appended to the system prompt.
+ *
+ * Matti:        empathymap block (name/age/gender of the young user)
+ * Opvoedmaatje: intake + focusChild + childSummary blocks
+ *
+ * All inputs are optional — existing Matti payloads without the new fields
+ * continue to work exactly as before.
+ */
+function buildUserContext(input: z.infer<typeof chatRequestSchema>): string {
+  if (ASSISTANT_TYPE === "opvoedmaatje") {
+    const parts: string[] = [];
+
+    // [INTAKE] — parent profile + goals
+    if (input.parentProfile || (input.children && input.children.length > 0)) {
+      const intakeLines: string[] = [];
+      if (input.parentProfile?.name) intakeLines.push(`Naam ouder: ${input.parentProfile.name}`);
+      if (input.parentProfile?.language) intakeLines.push(`Voorkeurstaal: ${input.parentProfile.language}`);
+      if (input.parentProfile?.goals && input.parentProfile.goals.length > 0)
+        intakeLines.push(`Doelen ouder: ${input.parentProfile.goals.join(', ')}`);
+      if (input.parentProfile?.burdenNote) intakeLines.push(`Draagkracht notitie: ${input.parentProfile.burdenNote}`);
+      if (input.children && input.children.length > 0) {
+        const childrenSummary = input.children
+          .map((c) => {
+            const g = c.gender === 'boy' ? 'Jongen' : c.gender === 'girl' ? 'Meisje' : 'Onbekend';
+            return `${c.name} (${c.age} jaar, ${g})`;
+          })
+          .join(', ');
+        intakeLines.push(`Kinderen in gezin: ${childrenSummary}`);
+      }
+      if (intakeLines.length > 0) parts.push(`[INTAKE]\n${intakeLines.join('\n')}`);
+    }
+
+    // [FOCUSKIND] — resolve focus child
+    if (input.children && input.children.length > 0) {
+      const focusChild = input.currentChildId
+        ? input.children.find((c) => c.id === input.currentChildId) ?? input.children[0]
+        : input.children[0];
+      const g = focusChild.gender === 'boy' ? 'Jongen' : focusChild.gender === 'girl' ? 'Meisje' : 'Onbekend';
+      parts.push(`[FOCUSKIND]\nNaam: ${focusChild.name}\nLeeftijd: ${focusChild.age} jaar\nGeslacht: ${g}`);
+      if (focusChild.summary) parts.push(`[CHILDSUMMARY]\n${focusChild.summary}`);
+    }
+
+    return parts.length > 0 ? '\n\n' + parts.join('\n\n') : '';
+  }
+
+  // --- Matti: original empathymap logic, unchanged ---
+  if (input.userProfile) {
+    const { name, age, gender } = input.userProfile;
+    const ageGroup = age <= 13 ? '12-13' : age <= 15 ? '14-15' : age <= 17 ? '16-17' : '18-21';
+    const genderLabel = gender === 'boy' ? 'Jongen'
+      : gender === 'girl' ? 'Meisje'
+      : gender === 'other' ? 'Anders'
+      : 'Niet opgegeven';
+    return `\n\n[GEBRUIKER CONTEXT - BELANGRIJK VOOR EMPATHYMAP]\nNaam: ${name}\nLeeftijd: ${age} jaar (${ageGroup})\nGender: ${genderLabel}${input.themeId ? `\nHuidig thema: ${input.themeId}` : ''}`;
+  }
+
+  return '';
+}
+
 export const assistantRouter = router({
   /**
    * Send a message to Matti using Chat Completions API
@@ -87,22 +169,17 @@ export const assistantRouter = router({
     .output(chatResponseSchema)
     .mutation(async ({ input }) => {
       try {
-        const { message, context, themeId, userProfile, followUpContext, crisisGuidance } = input;
+        const { message, context, followUpContext, crisisGuidance } = input;
 
-        // Build user context for empathymap
-        let userContext = '';
-        if (userProfile) {
-          const ageGroup = userProfile.age <= 13 ? '12-13' : 
-                          userProfile.age <= 15 ? '14-15' :
-                          userProfile.age <= 17 ? '16-17' : '18-21';
-          const genderLabel = userProfile.gender === 'boy' ? 'Jongen' :
-                             userProfile.gender === 'girl' ? 'Meisje' :
-                             userProfile.gender === 'other' ? 'Anders' : 'Niet opgegeven';
-          
-          userContext = `\n\n[GEBRUIKER CONTEXT - BELANGRIJK VOOR EMPATHYMAP]\nNaam: ${userProfile.name}\nLeeftijd: ${userProfile.age} jaar (${ageGroup})\nGender: ${genderLabel}${themeId ? `\nHuidig thema: ${themeId}` : ''}`;
+        // Build context block (assistant-specific, see buildUserContext)
+        const userContext = buildUserContext(input);
+
+        // Log context for Opvoedmaatje traceability
+        if (ASSISTANT_TYPE === "opvoedmaatje" && userContext) {
+          console.log('[Assistant][Opvoedmaatje] Context injected:', userContext.substring(0, 300));
         }
 
-        // Build system message with Matti instructions + user context + follow-up context + crisis guidance
+        // Build system message
         let systemMessage = assistantConfig.systemPrompt + userContext;
         
         // Add follow-up context if provided (for welcome messages)
@@ -219,8 +296,9 @@ export const assistantRouter = router({
   health: publicProcedure.query(() => {
     return {
       status: 'ok',
+      assistant: assistantConfig.name,
       hasApiKey: !!ENV.openaiApiKey,
-      apiType: 'chat-completions', // Direct API calls
+      apiType: 'chat-completions',
     };
   }),
 });
