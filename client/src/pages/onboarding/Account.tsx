@@ -18,6 +18,7 @@ export default function Account() {
   const [, setLocation] = useLocation();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [postcode, setPostcode] = useState("");
   const [rol, setRol] = useState("");
   const [kinderen, setKinderen] = useState<Kind[]>([{ naam: "", leeftijd: "" }]);
   const [analyticsConsent, setAnalyticsConsent] = useState(false);
@@ -66,6 +67,7 @@ export default function Account() {
       id: userId,
       name: name.trim(),
       email: email.trim(),
+      postcode: postcode.trim(),
       rol,
       kinderen: kinderen.filter((k) => k.naam.trim()),
       analyticsConsent,
@@ -93,7 +95,7 @@ export default function Account() {
           </p>
         </div>
 
-        {/* Voornaam */}
+        {/* Voornaam ouder */}
         <div className="mb-6">
           <label className="text-sm font-semibold text-foreground mb-2 block">
             Jouw voornaam *
@@ -106,6 +108,9 @@ export default function Account() {
             maxLength={50}
             className="w-full bg-card border border-border rounded-2xl px-4 py-4 text-base text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
+          <p className="text-xs text-muted-foreground mt-1 px-1">
+            We gebruiken je voornaam alleen om het gesprek persoonlijker te maken. Je gegevens worden nooit gedeeld met derden.
+          </p>
         </div>
 
         {/* E-mail */}
@@ -123,6 +128,30 @@ export default function Account() {
           />
           <p className="text-xs text-muted-foreground mt-1 px-1">
             Voor account herstel (optioneel)
+          </p>
+        </div>
+
+        {/* Postcode */}
+        <div className="mb-6">
+          <label className="text-sm font-semibold text-foreground mb-2 block">
+            Postcode (eerste 4 cijfers)
+          </label>
+          <input
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            value={postcode}
+            onChange={(e) => {
+              const val = e.target.value.replace(/\D/g, "").slice(0, 4);
+              setPostcode(val);
+            }}
+            placeholder="Bijvoorbeeld: 1234"
+            maxLength={4}
+            className="w-full bg-card border border-border rounded-2xl px-4 py-4 text-base text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          />
+          <p className="text-xs text-muted-foreground mt-1 px-1 flex items-start gap-1">
+            <span className="mt-0.5 flex-shrink-0 text-muted-foreground font-bold">ⓘ</span>
+            <span>We gebruiken alleen de cijfers van je postcode om inzicht te krijgen in welke thema's spelen in bepaalde postcodegebieden. Je exacte adres wordt nooit opgeslagen of gedeeld.</span>
           </p>
         </div>
 
@@ -160,26 +189,39 @@ export default function Account() {
           <div className="space-y-3">
             {kinderen.map((kind, index) => (
               <div key={index} className="flex gap-3">
-                <input
-                  type="text"
-                  value={kind.naam}
-                  onChange={(e) => updateKind(index, "naam", e.target.value)}
-                  placeholder="Naam"
-                  maxLength={30}
-                  className="flex-1 bg-card border border-border rounded-2xl px-4 py-3 text-base text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                />
-                <input
-                  type="number"
-                  value={kind.leeftijd}
-                  onChange={(e) => updateKind(index, "leeftijd", e.target.value)}
-                  placeholder="Leeftijd"
-                  min={0}
-                  max={25}
-                  className="w-28 bg-card border border-border rounded-2xl px-4 py-3 text-base text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                />
+                <div className="flex-1">
+                  {index === 0 && (
+                    <p className="text-xs text-muted-foreground mb-1 px-1">Voornaam kind</p>
+                  )}
+                  <input
+                    type="text"
+                    value={kind.naam}
+                    onChange={(e) => updateKind(index, "naam", e.target.value)}
+                    placeholder="Voornaam"
+                    maxLength={30}
+                    className="w-full bg-card border border-border rounded-2xl px-4 py-3 text-base text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  />
+                </div>
+                <div className="w-28">
+                  {index === 0 && (
+                    <p className="text-xs text-muted-foreground mb-1 px-1">Leeftijd</p>
+                  )}
+                  <input
+                    type="number"
+                    value={kind.leeftijd}
+                    onChange={(e) => updateKind(index, "leeftijd", e.target.value)}
+                    placeholder="Leeftijd"
+                    min={0}
+                    max={25}
+                    className="w-full bg-card border border-border rounded-2xl px-4 py-3 text-base text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  />
+                </div>
               </div>
             ))}
           </div>
+          <p className="text-xs text-muted-foreground mt-2 px-1">
+            De voornaam gebruiken we alleen binnen het gesprek, zodat Opvoedmaatje persoonlijk kan reageren. Deze gegevens blijven privé.
+          </p>
           {kinderen.length < 5 && (
             <button
               onClick={addKind}
@@ -209,8 +251,7 @@ export default function Account() {
             </div>
             <div className="flex-1">
               <p className="text-sm text-foreground leading-relaxed">
-                Opvoedmaatje gebruikt anonieme gegevens om de app te verbeteren.
-                Je naam en gesprekken worden <span className="font-bold">nooit</span> gedeeld.
+                Je gesprekken worden nooit gedeeld. We gebruiken alleen geanonimiseerde thema's (zoals slaapproblemen, stress of ruzie thuis) om de app te verbeteren en beter te begrijpen wat er speelt in verschillende regio's. Je voornaam en persoonlijke gegevens blijven privé.
               </p>
             </div>
           </button>
