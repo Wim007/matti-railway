@@ -27,7 +27,6 @@ function isWithinWindow(targetTime: string): boolean {
   const diff = Math.abs(nowMinutes - targetMinutes);
   return diff < 5;
 }
-}
 
 async function sendRoutineNotifications() {
   if (!vapidConfigured) return;
