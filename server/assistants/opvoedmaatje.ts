@@ -18,7 +18,7 @@ const __dirname = dirname(__filename);
 export const opvoedmaatjeConfig = {
   name: "Opvoedmaatje",
   logo: "/assets/opvoedmaatje-logo.svg",
-  primaryColor: "#2F6BFF",
+  primaryColor: "#2563B8",
   get systemPrompt(): string {
     return readFileSync(join(__dirname, "..", "opvoedmaatje-instructions.md"), "utf-8");
   },
