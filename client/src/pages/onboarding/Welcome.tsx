@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useLocation } from "wouter";
-import mattiAvatar from "@/assets/opvoedmaatje-avatar-transparent.png";
+import mattiAvatar from "@/assets/opvoedmaatje-logo-new.png";
 
 export default function Welcome() {
   const [, setLocation] = useLocation();
@@ -55,7 +55,7 @@ export default function Welcome() {
         <img
           src={mattiAvatar}
           alt="Opvoedmaatje"
-          style={{ width: "200px", height: "200px", objectFit: "contain" }}
+          style={{ width: "300px", height: "300px", objectFit: "contain" }}
         />
 
         {/* Titel + subtekst */}
