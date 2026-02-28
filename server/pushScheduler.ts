@@ -18,11 +18,15 @@ if (VAPID_PUBLIC && VAPID_PRIVATE) {
   }
 }
 
-function getCurrentTime(): string {
+// Controleer of een tijdstip (HH:MM) binnen het huidige 5-minuten venster valt
+function isWithinWindow(targetTime: string): boolean {
   const now = new Date();
-  const h = now.getHours().toString().padStart(2, "0");
-  const m = now.getMinutes().toString().padStart(2, "0");
-  return `${h}:${m}`;
+  const [targetH, targetM] = targetTime.split(":").map(Number);
+  const targetMinutes = targetH * 60 + targetM;
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  const diff = Math.abs(nowMinutes - targetMinutes);
+  return diff < 5;
+}
 }
 
 async function sendRoutineNotifications() {
@@ -30,8 +34,7 @@ async function sendRoutineNotifications() {
   const db = await getDb();
   if (!db) return;
 
-  const currentTime = getCurrentTime();
-
+  
   try {
     const allRoutines = await db.select().from(routines);
 
@@ -42,11 +45,11 @@ async function sendRoutineNotifications() {
       let title = "";
       let body = "";
 
-      if (routine.bedtime === currentTime) {
+              if (routine.bedtime && isWithinWindow(routine.bedtime)) {
         notificationType = "bedtime";
         title = "Slaaproutine";
         body = "Ga je op tijd naar bed?";
-      } else if (routine.wakeTime === currentTime) {
+              } else if (routine.wakeTime && isWithinWindow(routine.wakeTime)) {
         notificationType = "wakeup";
         title = "Slaaproutine";
         body = "Ben je op tijd opgestaan?";
@@ -91,9 +94,9 @@ export function startPushScheduler() {
     console.warn("[PushScheduler] VAPID keys niet ingesteld of ongeldig — push notifications uitgeschakeld");
     return;
   }
-  console.log("[PushScheduler] Gestart — controleert elke minuut");
-  // Check every minute
-  setInterval(sendRoutineNotifications, 60 * 1000);
+    console.log("[PushScheduler] Gestart — controleert elke 5 minuten");
+    // Check every 5 minutes
+    setInterval(sendRoutineNotifications, 5 * 60 * 1000);
   // Also check immediately on start
   sendRoutineNotifications();
 }
