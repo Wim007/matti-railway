@@ -140,7 +140,7 @@ export default function Actions() {
               <div className="text-6xl mb-4">🎯</div>
               <h3 className="text-lg font-semibold text-foreground mb-2">Nog geen acties</h3>
               <p className="text-muted-foreground text-sm">
-                Praat met Matti en maak concrete afspraken. Ik help je om ze te volgen!
+                Praat met Opvoedmaatje en maak concrete afspraken. Ik help je om ze te volgen!
               </p>
             </div>
           ) : (

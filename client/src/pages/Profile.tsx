@@ -139,7 +139,7 @@ export default function Profile() {
                       Thema suggesties
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Laat Matti een beter passend thema voorstellen
+                      Laat Opvoedmaatje een beter passend thema voorstellen
                     </p>
                   </div>
                   <button

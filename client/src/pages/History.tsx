@@ -68,7 +68,7 @@ export default function History() {
           </div>
           <h2 className="text-2xl font-semibold text-foreground mb-2">Nog geen gesprekken</h2>
           <p className="text-muted-foreground text-center max-w-md mb-8">
-            Start een gesprek met Matti. Je laatste 10 gesprekken worden hier bewaard.
+            Start een gesprek met Opvoedmaatje. Je laatste 10 gesprekken worden hier bewaard.
           </p>
           <button
             onClick={() => setLocation("/chat")}

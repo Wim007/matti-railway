@@ -30,7 +30,7 @@ export default function FeedbackDashboard() {
       {/* Header */}
       <div className="max-w-6xl mx-auto mb-8">
         <h1 className="text-3xl font-bold text-foreground mb-2">Feedback Dashboard</h1>
-        <p className="text-muted-foreground">Bekijk en analyseer gebruikersfeedback op Matti's responses</p>
+        <p className="text-muted-foreground">Bekijk en analyseer gebruikersfeedback op Opvoedmaatje's responses</p>
       </div>
 
       {/* Statistics Cards */}

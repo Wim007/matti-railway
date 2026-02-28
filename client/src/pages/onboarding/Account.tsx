@@ -220,7 +220,7 @@ export default function Account() {
             </div>
             <div className="flex-1">
               <p className="text-sm text-foreground leading-relaxed">
-                Ik ga ermee akkoord dat Matti anonieme data verzamelt om de app
+                Ik ga ermee akkoord dat Opvoedmaatje anonieme data verzamelt om de app
                 te verbeteren. Mijn naam en exacte gesprekken worden{" "}
                 <span className="font-bold">nooit</span> gedeeld.
               </p>

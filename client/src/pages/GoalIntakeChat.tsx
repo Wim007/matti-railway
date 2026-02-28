@@ -211,7 +211,7 @@ export default function GoalIntakeChat() {
           <h1 className="text-base font-semibold text-foreground leading-tight">
             {effectiveTitle}
           </h1>
-          <p className="text-xs text-muted-foreground">Matti helpt je op weg</p>
+          <p className="text-xs text-muted-foreground">Opvoedmaatje helpt je op weg</p>
         </div>
       </div>
 
@@ -237,7 +237,7 @@ export default function GoalIntakeChat() {
           <div className="flex justify-start">
             <div className="bg-muted rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-2">
               <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">Matti denkt na...</span>
+              <span className="text-sm text-muted-foreground">Opvoedmaatje denkt na...</span>
             </div>
           </div>
         )}

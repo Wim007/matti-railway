@@ -1,7 +1,7 @@
 {
-  "name": "Matti – Jouw AI Chatbuddy",
-  "short_name": "Matti",
-  "description": "Praat met Matti over alles wat je bezighoudt. Zonder oordeel.",
+  "name": "Opvoedmaatje – Jouw AI Opvoedassistent",
+  "short_name": "Opvoedmaatje",
+  "description": "Praat met Opvoedmaatje over opvoedvragen. Zonder oordeel.",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",

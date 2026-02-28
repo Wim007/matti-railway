@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useLocation } from "wouter";
-import mattiAvatar from "@/assets/matti-avatar.png";
+import mattiAvatar from "@/assets/opvoedmaatje-avatar.png";
 
 const EXAMPLE_OPTIONS = [
   "Ik voel me niet goed",
@@ -64,14 +64,14 @@ export default function Welcome() {
         {/* Avatar */}
         <img
           src={mattiAvatar}
-          alt="Matti"
+          alt="Opvoedmaatje"
           style={{ width: "120px", height: "120px", objectFit: "contain" }}
         />
 
         {/* Titel + subtekst */}
         <div style={{ textAlign: "center" }}>
           <h1 style={{ fontSize: "1.75rem", fontWeight: 700, color: "#2563eb", margin: 0 }}>
-            Hoi, ik ben Matti.
+            Hoi, ik ben Opvoedmaatje.
           </h1>
           <p style={{ fontSize: "1rem", color: "#64748b", marginTop: "8px" }}>
             Je kunt hier praten over wat er in je hoofd zit.
@@ -131,7 +131,7 @@ export default function Welcome() {
           Laten we praten
         </button>
 
-        {/* Over Matti link */}
+        {/* Over Opvoedmaatje link */}
         <button
           onClick={() => setLocation("/parent-info")}
           style={{
@@ -144,7 +144,7 @@ export default function Welcome() {
             padding: "4px",
           }}
         >
-          Over Matti
+          Over Opvoedmaatje
         </button>
 
       </div>

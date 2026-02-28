@@ -109,11 +109,11 @@ export default function GoalsOverview() {
               <div className="flex items-center gap-2">
                 <Plus className="w-4 h-4 text-blue-500" />
                 <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">
-                  Iets anders? Vertel het Matti
+                  Iets anders? Vertel het Opvoedmaatje
                 </span>
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                Matti stelt je een paar vragen en maakt een plan op maat.
+                Opvoedmaatje stelt je een paar vragen en maakt een plan op maat.
               </p>
             </button>
           </div>

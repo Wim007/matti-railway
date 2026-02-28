@@ -8,7 +8,7 @@ export default function ParentInfo() {
             Informatie voor ouders
           </h1>
           <p className="text-base text-muted-foreground leading-relaxed">
-            Alles wat je moet weten over Matti
+            Alles wat je moet weten over Opvoedmaatje
           </p>
         </div>
 
@@ -18,11 +18,11 @@ export default function ParentInfo() {
           <div className="bg-card border border-border rounded-2xl p-6">
             <h2 className="text-xl font-bold text-foreground mb-3 flex items-center gap-2">
               <span>🤖</span>
-              Wat is Matti?
+              Wat is Opvoedmaatje?
             </h2>
             <p className="text-base text-foreground leading-relaxed">
-              Matti is een AI-chatbuddy speciaal ontworpen voor jongeren tussen
-              12 en 21 jaar. Matti helpt jongeren met dagelijkse uitdagingen
+              Opvoedmaatje is een AI-assistent speciaal ontworpen voor ouders
+              met opvoedvragen. Opvoedmaatje helpt ouders met dagelijkse uitdagingen
               zoals school, vriendschappen, gevoelens en toekomstplannen door
               een luisterend oor te bieden en praktische tips te geven.
             </p>
@@ -72,7 +72,7 @@ export default function ParentInfo() {
               Hoe werkt het?
             </h2>
             <p className="text-base text-foreground leading-relaxed mb-4">
-              Matti gebruikt 9 verschillende thema's om gesprekken te
+              Opvoedmaatje gebruikt verschillende thema's om gesprekken te
               organiseren:
             </p>
             <ul className="space-y-2 text-base text-foreground leading-relaxed">
@@ -140,8 +140,8 @@ export default function ParentInfo() {
               Actie & Opvolging
             </h2>
             <p className="text-base text-foreground leading-relaxed">
-              Matti helpt niet alleen met praten, maar moedigt ook concrete
-              acties aan. Na een gesprek kan Matti suggesties doen voor
+              Opvoedmaatje helpt niet alleen met praten, maar moedigt ook concrete
+              acties aan. Na een gesprek kan Opvoedmaatje suggesties doen voor
               praktische stappen. Het systeem volgt automatisch op na een paar
               dagen om te zien hoe het gaat.
             </p>
@@ -154,7 +154,7 @@ export default function ParentInfo() {
               Vragen of zorgen?
             </h2>
             <p className="text-base text-foreground leading-relaxed">
-              Heeft u vragen over Matti of zorgen over het gebruik door uw
+              Heeft u vragen over Opvoedmaatje of zorgen over het gebruik door uw
               kind? Neem gerust contact met ons op via{" "}
               <a
                 href="mailto:info@matti.nl"
