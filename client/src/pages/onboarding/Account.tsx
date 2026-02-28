@@ -1,14 +1,25 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { AGE_RANGE, GENDER_OPTIONS } from "@shared/matti-types";
+
+const ROL_OPTIONS = [
+  "Ouder",
+  "Samengesteld ouder",
+  "Pleegouder",
+  "Verzorger",
+  "Anders",
+];
+
+interface Kind {
+  naam: string;
+  leeftijd: string;
+}
 
 export default function Account() {
   const [, setLocation] = useLocation();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [age, setAge] = useState("");
-  const [postalCode, setPostalCode] = useState("");
-  const [selectedGender, setSelectedGender] = useState("");
+  const [rol, setRol] = useState("");
+  const [kinderen, setKinderen] = useState<Kind[]>([{ naam: "", leeftijd: "" }]);
   const [analyticsConsent, setAnalyticsConsent] = useState(false);
 
   const validateEmail = (email: string): boolean => {
@@ -17,9 +28,16 @@ export default function Account() {
     return emailRegex.test(email);
   };
 
-  const validatePostalCode = (code: string): boolean => {
-    const postalCodeRegex = /^[1-9][0-9]{3}[A-Z]{2}$/;
-    return postalCodeRegex.test(code.toUpperCase().replace(/\s/g, ""));
+  const addKind = () => {
+    if (kinderen.length < 5) {
+      setKinderen([...kinderen, { naam: "", leeftijd: "" }]);
+    }
+  };
+
+  const updateKind = (index: number, field: keyof Kind, value: string) => {
+    const updated = [...kinderen];
+    updated[index] = { ...updated[index], [field]: value };
+    setKinderen(updated);
   };
 
   const handleFinish = () => {
@@ -33,45 +51,23 @@ export default function Account() {
       return;
     }
 
-    const ageNum = parseInt(age, 10);
-    if (isNaN(ageNum) || ageNum < AGE_RANGE.MIN || ageNum > AGE_RANGE.MAX) {
-      alert(`Voer een leeftijd in tussen ${AGE_RANGE.MIN} en ${AGE_RANGE.MAX} jaar.`);
-      return;
-    }
-
-    if (!postalCode.trim()) {
-      alert("Vul je postcode in om verder te gaan.");
-      return;
-    }
-
-    if (!validatePostalCode(postalCode)) {
-      alert("Vul een geldige Nederlandse postcode in (bijv. 1234AB).");
-      return;
-    }
-
-    // Mock: Save to localStorage
-    // Reuse existing ID if profile already exists, otherwise generate new one
     const existingProfile = localStorage.getItem("matti_user_profile");
     let userId = `user_${Date.now()}`;
     if (existingProfile) {
       try {
         const parsed = JSON.parse(existingProfile);
-        if (parsed.id) {
-          userId = parsed.id;
-        }
+        if (parsed.id) userId = parsed.id;
       } catch (e) {
         console.error("Failed to parse existing profile", e);
       }
     }
-    
+
     const profile = {
       id: userId,
       name: name.trim(),
       email: email.trim(),
-      age: ageNum,
-      birthYear: new Date().getFullYear() - ageNum,
-      postalCode: postalCode.toUpperCase().replace(/\s/g, ""),
-      gender: selectedGender,
+      rol,
+      kinderen: kinderen.filter((k) => k.naam.trim()),
       analyticsConsent,
       themeSuggestionsEnabled: true,
       createdAt: new Date().toISOString(),
@@ -81,42 +77,38 @@ export default function Account() {
     setLocation("/chat");
   };
 
-  const isFormValid =
-    name.trim() &&
-    age &&
-    postalCode.trim() &&
-    (!email || validateEmail(email)) &&
-    validatePostalCode(postalCode);
+  const isFormValid = name.trim() && (!email || validateEmail(email));
 
   return (
     <div className="min-h-screen bg-background overflow-y-auto">
       <div className="max-w-2xl mx-auto px-6 py-8">
+
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">
             Account aanmaken
           </h1>
           <p className="text-base text-muted-foreground leading-relaxed">
-            Vertel me iets over jezelf zodat ik je beter kan helpen 😊
+            Vertel iets over jouw gezinssituatie, zodat Opvoedmaatje beter kan meedenken.
           </p>
         </div>
 
-        {/* Name Field */}
+        {/* Voornaam */}
         <div className="mb-6">
           <label className="text-sm font-semibold text-foreground mb-2 block">
-            Voornaam *
+            Jouw voornaam *
           </label>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Bijvoorbeeld: Lisa"
+            placeholder="Bijvoorbeeld: Ellen"
             maxLength={50}
             className="w-full bg-card border border-border rounded-2xl px-4 py-4 text-base text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
         </div>
 
-        {/* Email Field */}
+        {/* E-mail */}
         <div className="mb-6">
           <label className="text-sm font-semibold text-foreground mb-2 block">
             E-mailadres (optioneel)
@@ -134,74 +126,71 @@ export default function Account() {
           </p>
         </div>
 
-        {/* Age Field */}
+        {/* Rol */}
         <div className="mb-6">
           <label className="text-sm font-semibold text-foreground mb-2 block">
-            Leeftijd *
-          </label>
-          <input
-            type="number"
-            value={age}
-            onChange={(e) => setAge(e.target.value)}
-            placeholder="Bijvoorbeeld: 16"
-            maxLength={2}
-            className="w-full bg-card border border-border rounded-2xl px-4 py-4 text-base text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          />
-          <p className="text-xs text-muted-foreground mt-1 px-1">
-            Tussen {AGE_RANGE.MIN} en {AGE_RANGE.MAX} jaar
-          </p>
-        </div>
-
-        {/* Postal Code Field */}
-        <div className="mb-6">
-          <label className="text-sm font-semibold text-foreground mb-2 block">
-            Postcode *
-          </label>
-          <input
-            type="text"
-            value={postalCode}
-            onChange={(e) => setPostalCode(e.target.value.toUpperCase())}
-            placeholder="Bijvoorbeeld: 1234AB"
-            maxLength={7}
-            className="w-full bg-card border border-border rounded-2xl px-4 py-4 text-base text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          />
-          <p className="text-xs text-muted-foreground mt-1 px-1">
-            Nederlandse postcode (4 cijfers + 2 letters)
-          </p>
-        </div>
-
-        {/* Gender Field */}
-        <div className="mb-6">
-          <label className="text-sm font-semibold text-foreground mb-2 block">
-            Hoe identificeer je jezelf? (optioneel)
+            Wat is jouw rol?
           </label>
           <div className="flex flex-col gap-2">
-            {GENDER_OPTIONS.map((option) => (
+            {ROL_OPTIONS.map((optie) => (
               <button
-                key={option.value}
-                onClick={() => setSelectedGender(option.value)}
+                key={optie}
+                onClick={() => setRol(optie)}
                 className={`bg-card border-2 ${
-                  selectedGender === option.value
-                    ? "border-primary bg-primary/5"
-                    : "border-border"
-                } rounded-xl px-4 py-3 flex items-center gap-3 hover:bg-muted transition-colors`}
+                  rol === optie ? "border-primary bg-primary/5" : "border-border"
+                } rounded-xl px-4 py-3 text-left hover:bg-muted transition-colors`}
               >
-                <span className="text-2xl">{option.emoji}</span>
                 <span
                   className={`text-base font-semibold ${
-                    selectedGender === option.value
-                      ? "text-primary"
-                      : "text-foreground"
+                    rol === optie ? "text-primary" : "text-foreground"
                   }`}
                 >
-                  {option.label}
+                  {optie}
                 </span>
               </button>
             ))}
           </div>
         </div>
 
-        {/* Analytics Consent */}
+        {/* Kinderen */}
+        <div className="mb-6">
+          <label className="text-sm font-semibold text-foreground mb-3 block">
+            Kind(eren)
+          </label>
+          <div className="space-y-3">
+            {kinderen.map((kind, index) => (
+              <div key={index} className="flex gap-3">
+                <input
+                  type="text"
+                  value={kind.naam}
+                  onChange={(e) => updateKind(index, "naam", e.target.value)}
+                  placeholder="Naam"
+                  maxLength={30}
+                  className="flex-1 bg-card border border-border rounded-2xl px-4 py-3 text-base text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                />
+                <input
+                  type="number"
+                  value={kind.leeftijd}
+                  onChange={(e) => updateKind(index, "leeftijd", e.target.value)}
+                  placeholder="Leeftijd"
+                  min={0}
+                  max={25}
+                  className="w-28 bg-card border border-border rounded-2xl px-4 py-3 text-base text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                />
+              </div>
+            ))}
+          </div>
+          {kinderen.length < 5 && (
+            <button
+              onClick={addKind}
+              className="mt-3 text-sm font-semibold text-primary hover:opacity-80 transition-opacity"
+            >
+              + Kind toevoegen
+            </button>
+          )}
+        </div>
+
+        {/* Privacy consent */}
         <div className="mb-8">
           <button
             onClick={() => setAnalyticsConsent(!analyticsConsent)}
@@ -220,20 +209,14 @@ export default function Account() {
             </div>
             <div className="flex-1">
               <p className="text-sm text-foreground leading-relaxed">
-                Ik ga ermee akkoord dat Opvoedmaatje anonieme data verzamelt om de app
-                te verbeteren. Mijn naam en exacte gesprekken worden{" "}
-                <span className="font-bold">nooit</span> gedeeld.
-              </p>
-              <p className="text-xs text-muted-foreground mt-2">
-                We delen alleen algemene trends (zoals thema's en
-                leeftijdsgroepen) met gemeentes om jongeren beter te kunnen
-                helpen. Je postcode wordt geanonimiseerd.
+                Opvoedmaatje gebruikt anonieme gegevens om de app te verbeteren.
+                Je naam en gesprekken worden <span className="font-bold">nooit</span> gedeeld.
               </p>
             </div>
           </button>
         </div>
 
-        {/* Submit Button */}
+        {/* Submit */}
         <div className="mt-8 mb-4">
           <button
             onClick={handleFinish}
@@ -242,15 +225,13 @@ export default function Account() {
               !isFormValid ? "opacity-50 cursor-not-allowed" : "hover:opacity-90"
             } transition-opacity`}
           >
-            Start chatten ✨
+            Start gesprek
           </button>
-
           <p className="text-xs text-muted-foreground text-center mt-4">
             * = Verplicht veld
           </p>
         </div>
 
-        {/* Extra space at bottom */}
         <div className="h-32" />
       </div>
     </div>

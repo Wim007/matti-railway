@@ -3,12 +3,12 @@ import { trpc } from "@/lib/trpc";
 import { ArrowLeft, Target, ChevronRight, Plus } from "lucide-react";
 
 const GOAL_TEMPLATES = [
-  { type: "social", emoji: "🤝", label: "Vriendschappen verbeteren" },
-  { type: "bullying", emoji: "🛡️", label: "Omgaan met pesten" },
-  { type: "school", emoji: "📚", label: "Beter presteren op school" },
-  { type: "stress", emoji: "😮‍💨", label: "Minder stress en zorgen" },
-  { type: "confidence", emoji: "💪", label: "Meer zelfvertrouwen" },
-  { type: "family", emoji: "🏠", label: "Beter contact thuis" },
+  { type: "rust", emoji: "🌿", label: "Meer rust in huis" },
+  { type: "boosheid", emoji: "🧘", label: "Minder boos reageren" },
+  { type: "driftbuien", emoji: "🌊", label: "Beter omgaan met driftbuien" },
+  { type: "verbinding", emoji: "❤️", label: "Meer verbinding met mijn kind" },
+  { type: "grenzen", emoji: "🛡️", label: "Grenzen stellen zonder strijd" },
+  { type: "zorgen", emoji: "☀️", label: "Minder zorgen maken" },
 ];
 
 export default function GoalsOverview() {
