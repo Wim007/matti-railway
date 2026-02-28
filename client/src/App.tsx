@@ -7,7 +7,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 // Onboarding screens
-import WelcomeOpvoedmaatje from "./pages/WelcomeOpvoedmaatje";
+import Welcome from "./pages/onboarding/Welcome";
 import Account from "./pages/onboarding/Account";
 
 // Main app screens
@@ -27,7 +27,7 @@ function Router() {
   return (
     <Switch>
       {/* Onboarding flow */}
-      {/* /onboarding/welcome removed — replaced by WelcomeOpvoedmaatje at / */}
+      <Route path="/onboarding/welcome" component={Welcome} />
       <Route path="/onboarding/account" component={Account} />
       
       {/* Main app tabs - protected */}
@@ -66,7 +66,7 @@ function Router() {
       </Route>
 
       {/* Root welcome route intentionally after specific routes to avoid catch-all behavior */}
-      <Route path="/" component={WelcomeOpvoedmaatje} />
+      <Route path="/" component={Welcome} />
       
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
