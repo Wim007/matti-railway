@@ -4,13 +4,17 @@
   "type": "module",
   "license": "MIT",
   "scripts": {
-    "dev": "NODE_ENV=development tsx watch server/_core/index.ts",
-    "build": "vite build && esbuild server/_core/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
+    "dev": "FRONTEND_DIR=client-matti NODE_ENV=development tsx watch server/_core/index.ts",
+    "build": "FRONTEND_DIR=client-matti vite build && esbuild server/_core/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
     "start": "NODE_ENV=production node dist/index.js",
     "check": "tsc --noEmit",
     "format": "prettier --write .",
     "test": "vitest run",
-    "db:push": "drizzle-kit generate --config=drizzle.config.ts && drizzle-kit migrate --config=drizzle.config.ts"
+    "db:push": "drizzle-kit generate --config=drizzle.config.ts && drizzle-kit migrate --config=drizzle.config.ts",
+    "dev:matti": "FRONTEND_DIR=client-matti NODE_ENV=development tsx watch server/_core/index.ts",
+    "dev:opvoedmaatje": "FRONTEND_DIR=client-opvoedmaatje NODE_ENV=development tsx watch server/_core/index.ts",
+    "build:matti": "FRONTEND_DIR=client-matti vite build && esbuild server/_core/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
+    "build:opvoedmaatje": "FRONTEND_DIR=client-opvoedmaatje vite build && esbuild server/_core/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.693.0",

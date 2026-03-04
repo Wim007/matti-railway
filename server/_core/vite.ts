@@ -30,10 +30,11 @@ export async function setupVite(app: Express, server: Server) {
     const url = req.originalUrl;
 
     try {
+      const frontendDir = process.env.FRONTEND_DIR ?? "client-matti";
       const clientTemplate = path.resolve(
         moduleDirname,
         "../..",
-        "client",
+        frontendDir,
         "index.html"
       );
 
