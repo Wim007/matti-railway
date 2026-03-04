@@ -1,0 +1,24 @@
+{
+  "name": "Matti – Jouw AI Chatbuddy",
+  "short_name": "Matti",
+  "description": "Praat met Matti over alles wat je bezighoudt. Zonder oordeel.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

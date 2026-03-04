@@ -9,18 +9,20 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const plugins = [react(), tailwindcss(), jsxLocPlugin()];
 
+const frontendDir = process.env.FRONTEND_DIR ?? "client-matti";
+
 export default defineConfig({
   plugins,
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "client", "src"),
+      "@": path.resolve(__dirname, frontendDir, "src"),
       "@shared": path.resolve(__dirname, "shared"),
       "@assets": path.resolve(__dirname, "attached_assets"),
     },
   },
   envDir: path.resolve(__dirname),
-  root: path.resolve(__dirname, "client"),
-  publicDir: path.resolve(__dirname, "client", "public"),
+  root: path.resolve(__dirname, frontendDir),
+  publicDir: path.resolve(__dirname, frontendDir, "public"),
   build: {
     outDir: path.resolve(__dirname, "dist/public"),
     emptyOutDir: true,
