@@ -12,10 +12,73 @@
 import { and, eq, lte } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
-import { actions, followUps, users } from "../drizzle/schema";
+import webpush from "web-push";
+import { actions, followUps, pushSubscriptions, users } from "../drizzle/schema";
 import { notifyOwner } from "./_core/notification";
 
 const { Pool } = pg;
+
+const VAPID_PUBLIC = (process.env.VAPID_PUBLIC_KEY || "").replace(/\s/g, "");
+const VAPID_PRIVATE = (process.env.VAPID_PRIVATE_KEY || "").replace(/\s/g, "");
+const VAPID_EMAIL = (process.env.VAPID_EMAIL || "mailto:info@slimmemaatjes.online").trim();
+
+let vapidConfigured = false;
+if (VAPID_PUBLIC && VAPID_PRIVATE) {
+  try {
+    webpush.setVapidDetails(VAPID_EMAIL, VAPID_PUBLIC, VAPID_PRIVATE);
+    vapidConfigured = true;
+  } catch (err: any) {
+    console.warn("[FollowUpHandler] Ongeldige VAPID keys — user push notifications uitgeschakeld:", err.message);
+  }
+}
+
+async function sendUserFollowUpPush(
+  db: any,
+  input: {
+    userId: string;
+    followUpId: number;
+    actionId: number;
+    actionText: string;
+    conversationId: number | null;
+  }
+): Promise<boolean> {
+  if (!vapidConfigured) {
+    return false;
+  }
+
+  const subResult = await db
+    .select()
+    .from(pushSubscriptions)
+    .where(eq(pushSubscriptions.userId, input.userId))
+    .limit(1);
+
+  if (subResult.length === 0) {
+    return false;
+  }
+
+  const subscription = JSON.parse(subResult[0].subscription);
+  const payload = JSON.stringify({
+    title: "Hoe is het gegaan?",
+    body: `Even inchecken: \"${input.actionText}\".`,
+    type: "action_follow_up",
+    followUpId: input.followUpId,
+    actionId: input.actionId,
+    url: input.conversationId ? `/chat?conversationId=${input.conversationId}` : "/chat",
+  });
+
+  try {
+    await webpush.sendNotification(subscription, payload);
+    return true;
+  } catch (err: any) {
+    console.error(`[FollowUpHandler] Fout bij user-push voor ${input.userId}:`, err.message);
+    if (err.statusCode === 410) {
+      await db
+        .delete(pushSubscriptions)
+        .where(eq(pushSubscriptions.userId, input.userId));
+    }
+    return false;
+  }
+}
 
 async function sendFollowUpNotifications() {
   console.log("[FollowUpHandler] Starting follow-up notification check...");
@@ -52,12 +115,20 @@ Gepland voor: ${new Date(followUp.scheduledFor).toLocaleDateString("nl-NL")}
 Deze gebruiker heeft een actie gepland en het is tijd voor een follow-up check-in.
         `.trim();
 
-        const success = await notifyOwner({
+        const ownerNotified = await notifyOwner({
           title: notificationTitle,
           content: notificationContent,
         });
 
-        if (success) {
+        const pushSent = await sendUserFollowUpPush(db, {
+          userId: user.openId,
+          followUpId: followUp.id,
+          actionId: action.id,
+          actionText: action.actionText,
+          conversationId: action.conversationId,
+        });
+
+        if (ownerNotified || pushSent) {
           await db
             .update(followUps)
             .set({
@@ -66,9 +137,11 @@ Deze gebruiker heeft een actie gepland en het is tijd voor een follow-up check-i
             })
             .where(eq(followUps.id, followUp.id));
 
-          console.log(`[FollowUpHandler] ✓ Sent notification for follow-up #${followUp.id}`);
+          console.log(
+            `[FollowUpHandler] ✓ Follow-up #${followUp.id} verwerkt (owner: ${ownerNotified}, user push: ${pushSent})`
+          );
         } else {
-          console.error(`[FollowUpHandler] ✗ Failed to send notification for follow-up #${followUp.id}`);
+          console.error(`[FollowUpHandler] ✗ Geen notificatie verstuurd voor follow-up #${followUp.id}`);
         }
       } catch (error) {
         console.error(`[FollowUpHandler] Error processing follow-up #${followUp.id}:`, error);
