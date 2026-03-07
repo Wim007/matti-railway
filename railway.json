@@ -2,7 +2,7 @@
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
     "builder": "NIXPACKS",
-    "buildCommand": "pnpm install --frozen-lockfile && pnpm build:opvoedmaatje"
+        "buildCommand": "pnpm install --frozen-lockfile && FRONTEND_DIR=client-matti pnpm run build"
   },
   "deploy": {
     "startCommand": "pnpm run start",
