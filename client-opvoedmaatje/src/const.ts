@@ -1,0 +1,8 @@
+export {
+  ACCESS_COOKIE_NAME,
+  REFRESH_COOKIE_NAME,
+  ACCESS_TOKEN_TTL_MS,
+  REFRESH_TOKEN_TTL_MS,
+} from "@shared/const";
+
+export const getLoginUrl = () => "/onboarding/welcome";
